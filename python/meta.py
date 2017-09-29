@@ -2,8 +2,8 @@ import os
 import json
 import pprint
 import random
-import string
 import datetime
+import tools
 
 
 class Meta:
@@ -67,20 +67,16 @@ class Meta:
         print('info=' + self.info)
 
 
-def randstr(len = 20):
-    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
-
-
 if __name__ == '__main__':
 
     meta = Meta()
     meta.read('meta.json')
     meta.print()
-    meta.album = randstr()
-    meta.artist = randstr()
+    meta.album = tools.randstr()
+    meta.artist = tools.randstr()
     meta.ntracks = 100
     meta.track = random.randint(0, meta.ntracks-1)
     meta.position = round(random.uniform(0.0,60.0), 1)
-    meta.info =  randstr()
+    meta.info =  tools.randstr()
     meta.print()
     meta.write()

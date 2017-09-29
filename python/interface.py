@@ -1,13 +1,16 @@
 import sys
 import os
-import playlist as pl
+import warnings
+
 from PyQt5.QtGui import (QIcon, QFont)
 from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt, QTime)
 from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView)
-import player as play
-import warnings
-import config
+
+import tools
+from player import Player
+from playlist import Playlist
+from scanner import Scanner
 
  
 class App(QWidget):
@@ -16,17 +19,23 @@ class App(QWidget):
     PLAYLIST, ARTIST, ALBUM, NTRACKS, DURATION = range(5)
  
     player = None
+    playlists = []
 
-
-    def __init__(self, playlists, confpath):
+    def __init__(self, root, ext='.mp3', force=False):
 
         super().__init__()        
-        self.initUI(playlists)     
-        self.player = play.Player(confpath)
-        self.player.update()
- 
 
-    def initUI(self, playlists):
+        self.player = Player()
+        self.player.connect(root)
+        self.player.update()
+
+        scanner = Scanner()
+        self.playlists = scanner.scan(root, ext=ext, force=force)
+
+        self.initUI()     
+        
+
+    def initUI(self):
 
         self.setWindowTitle('Audiobook Player')
         self.setWindowState(Qt.WindowMaximized)
@@ -49,7 +58,7 @@ class App(QWidget):
         model = self.createPlaylistModel(self)          
         self.dataView.setModel(model)                   
 
-        for playlist in playlists:                                       
+        for playlist in self.playlists:                                       
             self.addPlaylist(model, playlist)                        
         for i in range(model.columnCount()-1,0,-1):
             self.dataView.sortByColumn(i, Qt.AscendingOrder)     
@@ -66,7 +75,7 @@ class App(QWidget):
     def closeEvent(self, event):
 
         if self.player:
-            self.player.stop()
+            self.player.close()
         event.accept()
 
 
@@ -103,14 +112,8 @@ class App(QWidget):
 if __name__ == '__main__':
 
     confpath = '..\\mpd\\mpd.conf'
-    root = config.read(confpath, 'music_directory')
+    root = tools.readconf(confpath, 'music_directory')
     
-    playlists = []
-    for root,dirs,files in os.walk(root):                
-        playlist = pl.Playlist()
-        if playlist.parse(root):   
-            playlists.append(playlist)
-
     app = QApplication(sys.argv)
-    ex = App(playlists, confpath)
+    ex = App(root)
     sys.exit(app.exec_())

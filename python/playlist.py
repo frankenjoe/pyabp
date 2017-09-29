@@ -1,9 +1,9 @@
-import meta as m
 import glob
 import os
 from tinytag import TinyTag
 import warnings
-import config
+import tools
+from meta import Meta
 
 
 class Playlist:
@@ -13,53 +13,6 @@ class Playlist:
     ext = '.mp3'
     meta = None    
     files = []
-
-
-    def fullname(self):
-        if self.root != None:
-            return self.root.replace('\\', '.') + 'm3u'
-        else:
-            return None
-
-
-    def parse(self, root = None, ext = '.mp3', force = False):     
-                
-        if root != None:
-            self.root = root
-
-        if self.root != None and os.path.isdir(self.root):
-            files = glob.glob(os.path.join(self.root, '*' + self.ext)) 
-            if len(files) > 0:   
-                self.files = files
-                self.ext = ext
-                metapath = os.path.join(self.root, 'meta.json')
-                if os.path.exists(metapath) and not force:
-                    self.meta = m.Meta()
-                    self.meta.read(metapath)
-                else:                               
-                    meta = m.Meta()        
-                    mp3path = os.path.join(self.root, files[0])         
-                    try:
-                        tag = TinyTag.get(mp3path)
-                        meta.ntracks = len(self.files)
-                        if tag.artist:
-                            meta.artist = tag.artist
-                        if tag.album:
-                            meta.album = tag.album
-                        duration = 0.0
-                        for file in files:   
-                            mp3path = os.path.join(self.root, file)
-                            tag = TinyTag.get(mp3path)
-                            if tag.duration:
-                                duration = duration + tag.duration
-                        meta.duration = duration
-                    except:
-                        warnings.warn('could not read mp3 tag: ' + mp3path)
-                    meta.write(metapath)
-                    self.meta = meta
-                return True
-
-        return False        
 
 
     def write(self, path):
@@ -90,12 +43,9 @@ class Playlist:
 
 if __name__ == '__main__':
     
-    confpath = '..\\mpd\\mpd.conf'
-    root = config.read(confpath, 'music_directory')
-    force = True
-           
-    for root,dirs,files in os.walk(root):                
-        playlist = Playlist()        
-        if playlist.parse(root, force=force):
-            playlist.print()            
-    
+    playlist = Playlist()
+    playlist.meta = Meta()
+    playlist.root = tools.randstr()
+    for i in range(10):
+        playlist.files.append(tools.randstr())
+    playlist.print()

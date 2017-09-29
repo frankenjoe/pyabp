@@ -1,8 +1,12 @@
 import os
-from mpd import MPDClient
-import playlist as pl
 import time
-import config
+import warnings
+
+from mpd import MPDClient
+
+import tools
+from scanner import Scanner
+
 
 class Player:
 
@@ -12,17 +16,31 @@ class Player:
     isPlay = False
 
 
-    def __init__(self, confpath, host='localhost', port=6600):
+    def connect(self, root, host='127.0.0.1', port=6600):
 
         try:
             client = MPDClient()
             client.connect(host, port)
             print(client.mpd_version)
             self.client = client    
-            self.root = config.read(confpath, 'music_directory')        
+            self.root = root        
+
+            return True
+
         except:
-            warnings.warn('could not connect mpd: ' + confpath)
+            warnings.warn('could not connect mpd')
+    
+        return False
         
+
+    def close(self):
+        
+        if not self.client:
+            return
+
+        self.stop()
+        self.client.close()
+
 
     def update(self):
         
@@ -42,13 +60,13 @@ class Player:
         self.playlist = playlist
         self.client.clear()        
 
-        for file in playlist.files:
-            path = file.replace('\\', '/')
+        for path in playlist.files:
             if self.root and path.startswith(self.root):
                 path = path[len(self.root):]
-                if path.startswith('/'):
+                if path.startswith('\\'):
                     path = path[1:]
-            self.client.add(path)
+                path = path.replace('\\', '/')
+                self.client.add(path)
 
 
     def toggle(self):
@@ -97,19 +115,25 @@ class Player:
 
 if __name__ == '__main__':
     
-    path = 'F:\\Audiobooks\\Andere\\Edgar Allan Poe\\Das Fass Amontillado'
     confpath = '..\\mpd\\mpd.conf'
+    root = tools.readconf(confpath, 'music_directory')
 
-    playlist = pl.Playlist()
-    playlist.parse(path)
-    playlist.print()
+    scanner = Scanner()
+    playlists = scanner.scan(root)
+
+    if len(playlists) > 0:
+        
+        playlist = playlists[0]
+        playlist.print()
     
-    player = Player(confpath)
-    player.load(playlist)    
-    player.play()    
-    time.sleep(3)
-    player.toggle()
-    time.sleep(1)
-    player.toggle()
-    time.sleep(3)
-    player.stop()
+        player = Player()
+
+        if player.connect(root):
+            player.load(playlist)    
+            player.play()    
+            time.sleep(3)
+            player.toggle()
+            time.sleep(1)
+            player.toggle()
+            time.sleep(3)
+            player.close()
