@@ -9,6 +9,7 @@ def read(filepath, key):
 			if len(tokens) == 2 and tokens[0] == key:
 				return tokens[1].replace('\"', '')
 				
-	print('ERROR: key <' + key + '> not found in ' + filepath)
-	sys.exit()
+	warnings.warn('key <' + key + '> not found in ' + filepath)
+
+	return None
 

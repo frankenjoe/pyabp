@@ -3,6 +3,7 @@ import glob
 import os
 from tinytag import TinyTag
 import warnings
+import config
 
 
 class Playlist:
@@ -89,10 +90,12 @@ class Playlist:
 
 if __name__ == '__main__':
     
-    path = 'F:\\Audiobooks\\'
+    confpath = '..\\mpd\\mpd.conf'
+    root = config.read(confpath, 'music_directory')
+    force = True
            
-    for root,dirs,files in os.walk(path):                
+    for root,dirs,files in os.walk(root):                
         playlist = Playlist()        
-        if playlist.parse(root, force=False):
+        if playlist.parse(root, force=force):
             playlist.print()            
     

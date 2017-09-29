@@ -7,6 +7,7 @@ from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView)
 import player as play
 import warnings
+import config
 
  
 class App(QWidget):
@@ -101,9 +102,9 @@ class App(QWidget):
  
 if __name__ == '__main__':
 
-    root = 'F:\\Audiobooks\\'
     confpath = '..\\mpd\\mpd.conf'
-
+    root = config.read(confpath, 'music_directory')
+    
     playlists = []
     for root,dirs,files in os.walk(root):                
         playlist = pl.Playlist()
