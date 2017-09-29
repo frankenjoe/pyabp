@@ -4,6 +4,8 @@ A Python Audiobook Player
 
 # Dependencies
 
+pip install pyqt5
+
 pip install tinytag
 
 pip install python-mpd2
