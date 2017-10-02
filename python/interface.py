@@ -40,7 +40,7 @@ class App(QWidget):
         self.setWindowTitle('Audiobook Player')
         self.setWindowState(Qt.WindowMaximized)
  
-        self.dataGroupBox = QGroupBox("Bücher")
+        self.dataGroupBox = QGroupBox('Bibliothek')
         self.dataView = QTreeView()
         font = QFont()
         font.setPixelSize(16);
@@ -111,8 +111,7 @@ class App(QWidget):
  
 if __name__ == '__main__':
 
-    confpath = '..\\mpd\\mpd.conf'
-    root = tools.readconf(confpath, 'music_directory')
+    root = tools.getroot()  
     
     app = QApplication(sys.argv)
     ex = App(root)

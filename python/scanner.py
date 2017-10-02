@@ -24,10 +24,11 @@ class Scanner:
     def scandir(self, root, ext='.mp3', force=False):     
                 
         if os.path.isdir(root):
-            files = glob.glob(os.path.join(root, '*' + ext)) 
+            files = glob.glob(os.path.join(root, '*' + ext))
             if len(files) > 0:
                 playlist = Playlist()
                 playlist.root = root
+                files.sort()
                 playlist.files = files
                 playlist.ext = ext
 
@@ -65,8 +66,7 @@ class Scanner:
 
 if __name__ == '__main__':
     
-    confpath = '..\\mpd\\mpd.conf'
-    root = tools.readconf(confpath, 'music_directory')
+    root = tools.getroot()  
     force = True
                       
     scanner = Scanner()

@@ -115,8 +115,7 @@ class Player:
 
 if __name__ == '__main__':
     
-    confpath = '..\\mpd\\mpd.conf'
-    root = tools.readconf(confpath, 'music_directory')
+    root = tools.getroot()
 
     scanner = Scanner()
     playlists = scanner.scan(root)

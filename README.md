@@ -22,4 +22,6 @@ run pyabp.cmd
 
 # Linux
 
-Still to come
+run ./pyabp.sh
+
+
