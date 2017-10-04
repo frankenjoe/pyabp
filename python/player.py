@@ -10,6 +10,7 @@ from scanner import Scanner
 
 class Player:
 
+
     root = ''
     playlist = None
     client = None
@@ -18,20 +19,22 @@ class Player:
 
     def connect(self, root, host='127.0.0.1', port=6600):
 
-        try:
-            client = MPDClient()
-            client.connect(host, port)
-            print(client.mpd_version)
-            self.client = client    
-            self.root = root        
+        self.root = root
+        return self.init(host, port)       
+        
 
+    def init(self, host='127.0.0.1', port=6600):
+
+        try:            
+            self.client = MPDClient()
+            self.client.connect(host, port)            
             return True
 
         except:
             warnings.warn('could not connect mpd')
-    
+
         return False
-        
+
 
     def close(self):
         
@@ -39,7 +42,13 @@ class Player:
             return
 
         self.stop()
-        self.client.close()
+
+        try:        
+            self.client.close()
+        except Exception as ex:
+            print(ex)            
+            if self.init():
+                self.close()
 
 
     def update(self):
@@ -47,7 +56,12 @@ class Player:
         if not self.client:
             return
 
-        self.client.rescan()
+        try:
+            self.client.rescan()
+        except Exception as ex:
+            print(ex)
+            if self.init():
+                self.update()
 
 
     def load(self, playlist):
@@ -57,16 +71,23 @@ class Player:
 
         self.stop()
 
-        self.playlist = playlist
-        self.client.clear()        
+        try:
 
-        for path in playlist.files:
-            if self.root and path.startswith(self.root):
-                path = path[len(self.root):]
-                if path.startswith('\\'):
-                    path = path[1:]
-                path = path.replace('\\', '/')
-                self.client.add(path)
+            self.playlist = playlist
+            self.client.clear()        
+
+            for path in playlist.files:
+                if self.root and path.startswith(self.root):
+                    path = path[len(self.root):]
+                    if path.startswith('\\'):
+                        path = path[1:]
+                    path = path.replace('\\', '/')
+                    self.client.add(path)
+
+        except Exception as ex:
+            print(ex)
+            if self.init():
+                self.load(playlist)
 
 
     def toggle(self):
@@ -83,34 +104,89 @@ class Player:
     def play(self):
 
         if not self.client or self.isPlay:
-            return
+            return        
 
-        track = min(self.playlist.meta.track, self.playlist.meta.ntracks)            
-        position = self.playlist.meta.position 
-        print('play ' + str(track) + '>' + str(position))
-        self.client.play()
-        self.client.seek(track, position)
-        self.isPlay = True
+        try:
+
+            track = min(self.playlist.meta.track, self.playlist.meta.ntracks)            
+            position = self.playlist.meta.position 
+            print('play ' + str(track) + '>' + str(position))
+
+            self.client.play()
+            self.client.seek(track, position)
+            self.isPlay = True
+
+        except Exception as ex:
+            print(ex)
+            if self.init():
+                self.play()
 
 
     def stop(self):     
 
         if not self.client or not self.isPlay:
             return     
+
+        try:    		    		
    
-        status = self.client.status()		    		    		
-        self.client.stop()
-        self.isPlay = False
+            status = self.client.status()		
 
-        track = status['song']
-        position = status['elapsed']
-        volume = status['volume']            
+            self.client.stop()
+            self.isPlay = False
+        
+            track = status['song']
+            position = status['elapsed']
+            volume = status['volume']            
             
-        print('stop ' + str(track) + '>' + str(position))
+            print('stop ' + str(track) + '>' + str(position))
 
-        self.playlist.meta.position = float(position)
-        self.playlist.meta.track = int(track)
-        self.playlist.meta.write()
+            self.playlist.meta.position = float(position)
+            self.playlist.meta.track = int(track)
+            self.playlist.meta.write()
+
+        except Exception as ex:
+            print(ex)
+            if self.init():
+                self.stop()
+
+
+    def next(self):
+        
+        if not self.client:
+            return  
+
+        try:
+            self.client.next()
+        except Exception as ex:
+            print(ex)
+            if self.init():
+                self.next()
+
+
+    def previous(self):
+        
+        if not self.client:
+            return  
+
+        try:
+            self.client.previous()
+        except Exception as ex:
+            print(ex)
+            if self.init():
+                self.previous()
+
+
+    def restart(self):
+        
+        if not self.client:
+            return  
+
+        try:
+            self.client.seek(0,0.0)
+        except Exception as ex:
+            print(ex)
+            if self.init():
+                self.restart()
 
 
 if __name__ == '__main__':

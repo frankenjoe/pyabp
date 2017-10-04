@@ -1,4 +1,4 @@
 @echo off
 
 cd python
-python.exe interface.py
+python.exe gui_main.py

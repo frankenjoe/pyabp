@@ -1,2 +1,2 @@
 cd python
-python3 interface.py
+python3 gui_main.py
