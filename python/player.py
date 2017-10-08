@@ -84,6 +84,8 @@ class Player:
                     path = path.replace('\\', '/')
                     self.client.add(path)
 
+            self.volume(playlist.meta.volume)
+
         except Exception as ex:
             print(ex)
             if self.init():
@@ -91,9 +93,6 @@ class Player:
 
 
     def toggle(self):
-
-        if not self.client:
-            return
 
         if self.isPlay:
             self.stop()
@@ -103,7 +102,7 @@ class Player:
 
     def play(self):
 
-        if not self.client or self.isPlay:
+        if not self.client or not self.playlist or self.isPlay:
             return        
 
         try:
@@ -119,12 +118,12 @@ class Player:
         except Exception as ex:
             print(ex)
             if self.init():
-                self.play()
+                return self.play()
 
 
     def stop(self):     
 
-        if not self.client or not self.isPlay:
+        if not self.client or not self.playlist or not self.isPlay:
             return     
 
         try:    		    		
@@ -142,43 +141,48 @@ class Player:
 
             self.playlist.meta.position = float(position)
             self.playlist.meta.track = int(track)
+            self.playlist.meta.volume = int(volume)
             self.playlist.meta.write()
 
         except Exception as ex:
             print(ex)
             if self.init():
-                self.stop()
+                return self.stop()
 
 
     def next(self):
         
-        if not self.client:
+        if not self.client or not self.playlist:
             return  
 
-        try:
-            self.client.next()
+        try:          
+            (track, length, position, duration, path) = self.status()
+            if track < length - 1:
+                self.client.next()
         except Exception as ex:
             print(ex)
             if self.init():
-                self.next()
+                return self.next()
 
 
     def previous(self):
         
-        if not self.client:
+        if not self.client or not self.playlist:
             return  
 
         try:
-            self.client.previous()
+            (track, length, position, duration, path) = self.status()
+            if track > 0:                
+                self.client.previous()
         except Exception as ex:
             print(ex)
             if self.init():
-                self.previous()
+                return self.previous()
 
 
     def restart(self):
         
-        if not self.client:
+        if not self.client or not self.playlist:
             return  
 
         try:
@@ -186,7 +190,43 @@ class Player:
         except Exception as ex:
             print(ex)
             if self.init():
-                self.restart()
+                return self.restart()
+
+
+    def volume(self, value):
+        
+        if not self.client or not self.playlist:
+            return  
+
+        try:
+            value = max(0,min(100,value))
+            self.client.setvol(value)
+        except Exception as ex:
+            print(ex)
+            if self.init():
+                return self.volume(value)
+
+
+    def status(self):
+        
+        if not self.client or not self.playlist or not self.isPlay:
+            return (-1,0,0,0,'')  
+
+        try:    		    		
+   
+            status = self.client.status()	            
+            track = int(status['song'])
+            path = self.playlist.files[track]
+            length = int(status['playlistlength'])
+            position = float(status['elapsed'])
+            duration = float(status['duration'])
+
+            return (track,length,position,duration,path)
+
+        except Exception as ex:
+            print(ex)
+            if self.init():
+                return self.status()        
 
 
 if __name__ == '__main__':

@@ -27,7 +27,7 @@ class Playlist:
 
     def print(self, n_files=5):
 
-        print('-'*60)
+        print('-'*30)
         print(self.root);
         print('-'*30)                
         if self.meta:

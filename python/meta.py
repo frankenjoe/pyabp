@@ -2,7 +2,6 @@ import os
 import json
 import pprint
 import random
-import datetime
 import tools
 
 
@@ -16,36 +15,35 @@ class Meta:
     ntracks = 0
     position = 0
     duration = 0.0
-    info = ''
+    volume = 50
 
-
-    def positionstr(self):
-        return str(datetime.timedelta(seconds=int(self.position)))
-
-
-    def durationstr(self):
-        return str(datetime.timedelta(seconds=int(self.duration)))
-       
 
     def read(self, path = None):    
+
         if path != None:
             self.path = path
+
         if self.path != None and os.path.exists(self.path):
+
             with open(self.path, 'r') as fp:    
                 data = json.load(fp)
-                self.album = data['album']
-                self.artist = data['artist']
-                self.ntracks = data['ntracks']
-                self.duration = data['duration']
-                self.track = data['track']
-                self.position = data['position']
-                self.info = data['info']
+
+            self.album = data['album']
+            self.artist = data['artist']
+            self.ntracks = data['ntracks']
+            self.duration = data['duration']
+            self.track = data['track']
+            self.position = data['position']
+            self.volume = data['volume']
 
 
     def write(self, path = None):
+
         if path != None:
             self.path = path
+
         if self.path != None:
+
             data = {}
             data['album'] = self.album
             data['artist'] = self.artist            
@@ -53,7 +51,8 @@ class Meta:
             data['duration'] = self.duration
             data['track'] = self.track
             data['position'] = self.position
-            data['info'] = self.info
+            data['volume'] = self.volume
+
             with open(self.path, 'w') as fp:    
                 json.dump(data, fp)
                           
@@ -62,9 +61,9 @@ class Meta:
         print('artist=' + self.artist)
         print('album=' + self.album)
         print('track=' + str(self.track+1) + '/' + str(self.ntracks))        
-        print('position=' + self.positionstr())
-        print('total=' + self.durationstr())
-        print('info=' + self.info)
+        print('position=' + tools.friendlytime(self.position))
+        print('total=' + tools.friendlytime(self.duration))
+        print('volume=' + str(self.volume))
 
 
 if __name__ == '__main__':
@@ -77,6 +76,6 @@ if __name__ == '__main__':
     meta.ntracks = 100
     meta.track = random.randint(0, meta.ntracks-1)
     meta.position = round(random.uniform(0.0,60.0), 1)
-    meta.info =  tools.randstr()
+    meta.volume = random.randint(0, 100)
     meta.print()
     meta.write()

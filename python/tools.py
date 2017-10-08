@@ -5,6 +5,8 @@ import warnings
 import random
 import string
 import platform
+import datetime
+import shutil
 
 
 def islinux():
@@ -28,6 +30,19 @@ def readconf(filepath, key):
 
 def randstr(len = 20):
 	return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
+
+
+def friendlytime(time):
+    return str(datetime.timedelta(seconds=int(time)))
+
+
+def copyfile(src, dst):
+    try:
+        shutil.copy(src, dst)    
+    except shutil.Error as e:
+        print('Error: %s' % e)    
+    except IOError as e:
+        print('Error: %s' % e.strerror)
 
 
 def getroot():	
