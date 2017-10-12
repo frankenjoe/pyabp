@@ -19,7 +19,6 @@ from scanner import Scanner
 from gui_library import Library
 from gui_control import Control
 from gui_control_thread import ControlThread
-from gui_export import Export
  
 class App(QWidget):
  
@@ -27,11 +26,11 @@ class App(QWidget):
     CONFFILE = 'pyabp.init'
     TITLE = 'Python Audiobook Player'
 
+    scanner = None
     player = None
     library = None
     control = None
     controlThread = None    
-    export = None
     layout = None    
 
 
@@ -51,8 +50,8 @@ class App(QWidget):
 
         # playlists
 
-        scanner = Scanner()
-        playlists = scanner.scan(root, ext=ext, force=force)
+        self.scanner = Scanner()
+        playlists = self.scanner.scan(root, ext=ext, force=force)
 
         # init
 
@@ -71,6 +70,8 @@ class App(QWidget):
 
         self.library = Library(playlists)
         self.library.view.doubleClicked.connect(self.libraryClicked)    
+        self.library.exportButton.clicked.connect(self.exportClicked)   
+        self.library.rescanButton.clicked.connect(self.rescanClicked)   
         self.library.setVisible(False)       
 
         # control
@@ -83,20 +84,13 @@ class App(QWidget):
         self.control.stopButton.clicked.connect(self.player.stop)
         self.control.nextButton.clicked.connect(self.player.next)
         self.control.volumeSlider.valueChanged.connect(self.volumeChanged)
-        self.controlThread = ControlThread(self.player, self.control)     
-
-        # export
-
-        self.export = Export()        
-        self.export.setVisible(False) 
-        self.export.exportButton.clicked.connect(self.exportClicked)             
+        self.controlThread = ControlThread(self.player, self.control)               
 
         # main
         
         self.layout = QVBoxLayout()
-        self.layout.addWidget(self.library)        
+        self.layout.addWidget(self.library)     
         self.layout.addWidget(self.control)
-        self.layout.addWidget(self.export)
         self.setLayout(self.layout)   
 
         # show
@@ -110,7 +104,6 @@ class App(QWidget):
         
         isVisible = self.library.isVisible()
         self.library.setVisible(not isVisible)
-        self.export.setVisible(not isVisible)
         if isVisible:
             self.setFixedSize(self.layout.sizeHint())
             self.setWindowState(Qt.WindowNoState) 
@@ -152,11 +145,11 @@ class App(QWidget):
             root = config['DEFAULT']['root']
             export = config['DEFAULT']['export']
             if os.path.exists(export):
-                self.export.rootLineEdit.setText(export)
+                self.library.rootLineEdit.setText(export)
             play = False if int(config['DEFAULT']['play']) <= 0 else True            
             for playlist in playlists:
                 if playlist.root == root:
-                    self.loadPlaylist(playlist, play=play)                    
+                    self.loadPlaylist(playlist, play)                    
                     break   
             full = False if int(config['DEFAULT']['full']) <= 0 else True
             if full:
@@ -168,14 +161,14 @@ class App(QWidget):
         config = ConfigParser()
         if self.player.playlist:
             root = self.player.playlist.root
-            export = self.export.rootLineEdit.text()            
+            export = self.library.rootLineEdit.text()            
             play = 1 if self.player.isPlay else 0
             full = 1 if self.library.isVisible() else 0
             config['DEFAULT'] = { 'root' : root, 'play' : play, 'export' : export, 'full' : full }
             with open(self.CONFFILE, 'w') as fp:
                 config.write(fp)
 
-    def loadPlaylist(self, playlist, play=True):
+    def loadPlaylist(self, playlist, play):
         
         playlist.print()
         self.player.load(playlist)
@@ -187,9 +180,8 @@ class App(QWidget):
 
     def libraryClicked(self, index):
 
-        item = self.library.view.model().item(index.row(),0)                
-        playlist = item.data(0)
-        self.loadPlaylist(playlist)
+        playlist = self.library.getPlaylist()                
+        self.loadPlaylist(playlist, False)
 
 
     def volumeChanged(self, value):
@@ -199,30 +191,30 @@ class App(QWidget):
 
     def exportClicked(self):
 
-        if not self.player.playlist:
-            return
-
-        playlist = self.player.playlist
-        root = self.export.rootLineEdit.text()
+        root = self.library.rootLineEdit.text()
         if os.path.exists(root):
-            print('-'*30)
-            files = glob.glob(os.path.join(root, 'pyabp*'))
-            count = 1
-            if len(files) > 0:
-                reply = QMessageBox.question(self, 'Question', 'Delete existing playlist (otherwise files are appended)?.', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                if reply == QMessageBox.No:
-                    count = len(files) + 1
-                else:                    
-                    for file in files:
-                        print('delete ' + file)
-                        os.remove(file)            
-            for file in playlist.files:
-                src = os.path.join(playlist.root, file)
-                name, ext = os.path.splitext(src)
-                dst = os.path.join(root, 'pyabp' + str(count).zfill(4)) + ext
-                print('copy ' + src + ' > ' + dst)
-                tools.copyfile(src, dst)
-                count = count + 1            
+            playlist = self.library.getPlaylist()
+            if playlist:            
+                print('-'*30)
+                files = glob.glob(os.path.join(root, 'pyabp*'))
+                count = 1
+                if len(files) > 0:
+                    reply = tools.askUser('Delete existing playlist (otherwise files are appended)?', self)
+                    if not reply:
+                        count = len(files) + 1
+                    else:                    
+                        for file in files:
+                            print('delete ' + file)
+                            os.remove(file) 
+
+                playlist.export(root, count)
+
+
+    def rescanClicked(self):
+        
+        playlist = self.library.getPlaylist()
+        if playlist:
+            self.scanner.scandir(playlist.root, playlist.ext, True)
 
  
 if __name__ == '__main__':

@@ -14,7 +14,6 @@ class Playlist:
     meta = None    
     files = []
 
-
     def write(self, path):
 
         if len(files) > 0:
@@ -23,6 +22,17 @@ class Playlist:
                     name, ext = os.path.splitext(file)                
                     path = os.path.join(self.root, file)                
                     fp.write(path + '\n')
+
+
+    def export(self, root, count = 1):
+
+        for file in self.files:
+            src = os.path.join(self.root, file)
+            name, ext = os.path.splitext(src)
+            dst = os.path.join(root, 'pyabp' + str(count).zfill(4)) + ext
+            print('copy ' + src + ' > ' + dst)
+            tools.copyfile(src, dst)
+            count = count + 1
 
 
     def print(self, n_files=5):

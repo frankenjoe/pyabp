@@ -19,5 +19,5 @@ class ControlThread:
             
         while True:            
             control.update(player.status())
-            time.sleep(1)
+            time.sleep(0.5)
             

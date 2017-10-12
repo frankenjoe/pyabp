@@ -3,6 +3,7 @@ import time
 import warnings
 
 from mpd import MPDClient
+from tinytag import TinyTag
 
 import tools
 from scanner import Scanner
@@ -123,31 +124,37 @@ class Player:
 
     def stop(self):     
 
-        if not self.client or not self.playlist or not self.isPlay:
+        if not self.client or not self.playlist:
             return     
 
-        try:    		    		
-   
-            status = self.client.status()		
+        if not self.isPlay:
 
-            self.client.stop()
-            self.isPlay = False
-        
-            track = status['song']
-            position = status['elapsed']
-            volume = status['volume']            
-            
-            print('stop ' + str(track) + '>' + str(position))
-
-            self.playlist.meta.position = float(position)
-            self.playlist.meta.track = int(track)
-            self.playlist.meta.volume = int(volume)
             self.playlist.meta.write()
 
-        except Exception as ex:
-            print(ex)
-            if self.init():
-                return self.stop()
+        else:
+
+            try:    		    		
+   
+                status = self.client.status()		
+
+                self.client.stop()
+                self.isPlay = False
+        
+                track = status['song']
+                position = status['elapsed']
+                volume = status['volume']            
+            
+                print('stop ' + str(track) + '>' + str(position))
+
+                self.playlist.meta.position = float(position)
+                self.playlist.meta.track = int(track)
+                self.playlist.meta.volume = int(volume)
+                self.playlist.meta.write()
+
+            except Exception as ex:
+                print(ex)
+                if self.init():
+                    return self.stop()
 
 
     def next(self):
@@ -155,14 +162,22 @@ class Player:
         if not self.client or not self.playlist:
             return  
 
-        try:          
-            (track, length, position, duration, path) = self.status()
-            if track < length - 1:
-                self.client.next()
-        except Exception as ex:
-            print(ex)
-            if self.init():
-                return self.next()
+        if not self.isPlay:
+            length = len(self.playlist.files)
+            if self.playlist.meta.track < length - 1:
+                self.playlist.meta.track = self.playlist.meta.track + 1
+                self.playlist.meta.position = 0
+            
+        else:
+
+            try:          
+                (track, length, position, duration, path) = self.status()
+                if track < length - 1:
+                    self.client.next()
+            except Exception as ex:
+                print(ex)
+                if self.init():
+                    return self.next()
 
 
     def previous(self):
@@ -170,14 +185,22 @@ class Player:
         if not self.client or not self.playlist:
             return  
 
-        try:
-            (track, length, position, duration, path) = self.status()
-            if track > 0:                
-                self.client.previous()
-        except Exception as ex:
-            print(ex)
-            if self.init():
-                return self.previous()
+        if not self.isPlay:
+            length = len(self.playlist.files)
+            if self.playlist.meta.track > 0:
+                self.playlist.meta.track = self.playlist.meta.track - 1
+                self.playlist.meta.position = 0
+
+        else:
+
+            try:
+                (track, length, position, duration, path) = self.status()
+                if track > 0:                
+                    self.client.previous()
+            except Exception as ex:
+                print(ex)
+                if self.init():
+                    return self.previous()
 
 
     def restart(self):
@@ -185,12 +208,18 @@ class Player:
         if not self.client or not self.playlist:
             return  
 
-        try:
-            self.client.seek(0,0.0)
-        except Exception as ex:
-            print(ex)
-            if self.init():
-                return self.restart()
+        if not self.isPlay:
+            self.playlist.meta.track = 0
+            self.playlist.meta.position = 0
+
+        else:
+
+            try:
+                self.client.seek(0,0.0)
+            except Exception as ex:
+                print(ex)
+                if self.init():
+                    return self.restart()
 
 
     def volume(self, value):
@@ -198,8 +227,10 @@ class Player:
         if not self.client or not self.playlist:
             return  
 
+        value = max(0,min(100,value))
+        self.playlist.meta.volume = value
+
         try:
-            value = max(0,min(100,value))
             self.client.setvol(value)
         except Exception as ex:
             print(ex)
@@ -209,24 +240,39 @@ class Player:
 
     def status(self):
         
-        if not self.client or not self.playlist or not self.isPlay:
+        if not self.client or not self.playlist:
             return (-1,0,0,0,'')  
 
-        try:    		    		
-   
-            status = self.client.status()	            
-            track = int(status['song'])
+        if not self.isPlay:
+
+            track = self.playlist.meta.track
             path = self.playlist.files[track]
-            length = int(status['playlistlength'])
-            position = float(status['elapsed'])
-            duration = float(status['duration'])
+            length = len(self.playlist.files)
+            position = self.playlist.meta.position           
+               
+            try:
+                tag = TinyTag.get(path)
+                duration = tag.duration
+            except:
+                duration = 0.0
+               
+        else:
 
-            return (track,length,position,duration,path)
+            try:    		    		
+   
+                status = self.client.status()	            
+                track = int(status['song'])
+                path = self.playlist.files[track]
+                length = int(status['playlistlength'])
+                position = float(status['elapsed'])
+                duration = float(status['duration'])
 
-        except Exception as ex:
-            print(ex)
-            if self.init():
-                return self.status()        
+            except Exception as ex:
+                print(ex)
+                if self.init():
+                    return self.status()        
+
+        return (track,length,position,duration,path)
 
 
 if __name__ == '__main__':

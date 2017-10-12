@@ -8,6 +8,7 @@ import platform
 import datetime
 import shutil
 
+from PyQt5.QtWidgets import (QMessageBox)
 
 def islinux():
 	return platform.system().startswith('Linux')
@@ -43,6 +44,14 @@ def copyfile(src, dst):
         print('Error: %s' % e)    
     except IOError as e:
         print('Error: %s' % e.strerror)
+
+
+def askUser(text, parent):
+    reply = QMessageBox.question(parent, 'Question', text, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+    if reply == QMessageBox.No:
+        return False
+    else:
+        return True
 
 
 def getroot():	

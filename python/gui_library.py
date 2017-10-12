@@ -17,7 +17,9 @@ class Library(QGroupBox):
     PLAYLIST, ARTIST, ALBUM, NTRACKS, DURATION = range(5)
 
     view = None
-
+    rescanButton = None
+    exportButton = None    
+    rootLineEdit = None
  
     def __init__(self, playlists, fontSize = 16):
 
@@ -57,15 +59,34 @@ class Library(QGroupBox):
             view.resizeColumnToContents(i)
         view.hideColumn(0)      
 
+        self.rescanButton = QPushButton('RESCAN')        
+        self.rescanButton.setFont(font)
+        self.exportButton = QPushButton('EXPORT')        
+        self.exportButton.setFont(font)
+        self.rootLineEdit = QLineEdit('')        
+        self.rootLineEdit.setFont(font)                
+
+        layout_bottom = QHBoxLayout()
+        layout_bottom.addWidget(self.rescanButton)
+        layout_bottom.addWidget(self.exportButton)
+        layout_bottom.addWidget(self.rootLineEdit)
+
         layout = QVBoxLayout()
         layout.addWidget(view)
+        layout.addLayout(layout_bottom)
+
         self.setLayout(layout)
 
         self.view = view
 
+    
+    def getPlaylist(self):
+        
+        indices = self.view.selectedIndexes()
+        if len(indices) == 0:
+            return None
+        index = indices[0].row()
+        item = self.view.model().item(index)
+        playlist = item.data(0)
 
-
-
-
-
- 
+        return playlist

@@ -1,7 +1,9 @@
 import glob
 import os
-from tinytag import TinyTag
 import warnings
+
+from tinytag import TinyTag
+
 import tools
 from playlist import Playlist
 from meta import Meta
