@@ -122,6 +122,25 @@ class Player:
                 return self.play()
 
 
+    def move(self, position):
+
+        if not self.client or not self.playlist:
+            return  
+
+        if not self.isPlay:
+
+            self.playlist.meta.position = position
+
+        else:
+
+            try:
+                self.client.seekcur(position)
+            except Exception as ex:
+                print(ex)
+                if self.init():
+                    return self.move(position)   
+
+
     def stop(self):     
 
         if not self.client or not self.playlist:
@@ -219,7 +238,7 @@ class Player:
             except Exception as ex:
                 print(ex)
                 if self.init():
-                    return self.restart()
+                    return self.restart()               
 
 
     def volume(self, value):

@@ -22,16 +22,17 @@ from gui_control_thread import ControlThread
  
 class App(QWidget):
  
-
+    
     CONFFILE = 'pyabp.init'
     TITLE = 'Python Audiobook Player'
+    ICONFILE = '../pics/player.ico'
 
     scanner = None
     player = None
     library = None
     control = None
     controlThread = None    
-    layout = None    
+    layout = None      
 
 
     def __init__(self, root, ext='.mp3', force=False):
@@ -65,6 +66,7 @@ class App(QWidget):
     def initUI(self, playlists):
 
         self.setWindowTitle(self.TITLE)
+        self.setWindowIcon(QIcon(self.ICONFILE))
  
         # library
 
@@ -84,6 +86,7 @@ class App(QWidget):
         self.control.stopButton.clicked.connect(self.player.stop)
         self.control.nextButton.clicked.connect(self.player.next)
         self.control.volumeSlider.valueChanged.connect(self.volumeChanged)
+        self.control.trackPositionSlider.sliderMoved.connect(self.positionChanged)
         self.controlThread = ControlThread(self.player, self.control)               
 
         # main
@@ -171,11 +174,11 @@ class App(QWidget):
     def loadPlaylist(self, playlist, play):
         
         playlist.print()
-        self.player.load(playlist)
-        if play:
-            self.player.play()       
+        self.player.load(playlist)   
         self.control.volumeSlider.setValue(playlist.meta.volume)
         self.setWindowTitle(self.TITLE + ' [ ' + playlist.meta.artist + ' - ' + playlist.meta.album + ' ]') 
+        if play:
+            self.player.play()   
  
 
     def libraryClicked(self, index):
@@ -187,6 +190,11 @@ class App(QWidget):
     def volumeChanged(self, value):
         
         self.player.volume(value)
+
+
+    def positionChanged(self, value):
+        
+        self.player.move(value)
 
 
     def exportClicked(self):

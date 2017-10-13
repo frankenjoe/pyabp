@@ -117,7 +117,7 @@ class Control(QGroupBox):
         if track >= 0:
             self.trackPathLabel.setText(os.path.basename(path))
             self.trackPathLabel.setToolTip(path)
-            self.trackNumberLabel.setText('(' + str(track+1) + '/' + str(length) + ')')               
+            self.trackNumberLabel.setText(str(track+1) + ' / ' + str(length))               
             self.trackPositionSlider.setMaximum(int(duration))
             self.trackPositionSlider.setValue(int(position))          
             self.trackDurationLabel.setText(tools.friendlytime(duration))  

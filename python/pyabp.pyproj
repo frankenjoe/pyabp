@@ -26,7 +26,6 @@
     <Compile Include="gui_control_thread.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="gui_export.py" />
     <Compile Include="gui_library.py" />
     <Compile Include="gui_main.py" />
     <Compile Include="meta.py" />
