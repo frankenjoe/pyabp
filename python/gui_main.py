@@ -151,10 +151,10 @@ class App(QWidget):
 
     def closeEvent(self, event):        
 
+        self.writeConfig()
+
         if self.player:        
             self.player.close()
-
-        self.writeConfig()
 
         event.accept()         
 
