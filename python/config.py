@@ -9,7 +9,7 @@ class Config:
     isPlaying = False
     currentPath = ''
     fullScreen = False
-    fontSize = 10        
+    fontSize = 16        
 
 
     def read(self, path):
@@ -17,12 +17,14 @@ class Config:
         config = ConfigParser()
         if os.path.exists(path):
             config.read(path)
-            self.currentPath = config['DEFAULT']['currentPath']
-            self.exportPath = config['DEFAULT']['exportPath']            
-            self.isPlaying = False if int(config['DEFAULT']['isPlaying']) <= 0 else True            
-            self.fullScreen = False if int(config['DEFAULT']['fullScreen']) <= 0 else True
-            self.fontSize = int(config['DEFAULT']['fontSize'])
-    
+            try:
+                self.currentPath = config['DEFAULT']['currentPath']
+                self.exportPath = config['DEFAULT']['exportPath']            
+                self.isPlaying = False if int(config['DEFAULT']['isPlaying']) <= 0 else True            
+                self.fullScreen = False if int(config['DEFAULT']['fullScreen']) <= 0 else True
+                self.fontSize = int(config['DEFAULT']['fontSize'])
+            except:
+                print('could not read config file "' + path + '"')
 
     def write(self, path):
 
