@@ -11,7 +11,7 @@ from playlist import Playlist
 import tools
 
 
-PLAYLIST, ARTIST, ALBUM, NTRACKS, DURATION = range(5)
+PLAYLIST, ARTIST, ALBUM, DURATION, COLUMNS = range(5)
 
  
 class SortFilterProxyModel(QSortFilterProxyModel):
@@ -38,11 +38,13 @@ class Library(QGroupBox):
      
 
     view = None
+    model = None
+    filter = None
     searchIcon = None
     searchLineEdit = None
     rescanButton = None
     exportButton = None    
-    rootLineEdit = None    
+    exportLineEdit = None    
 
  
     def __init__(self, playlists, font=QFont()):
@@ -56,18 +58,16 @@ class Library(QGroupBox):
 
         # list
 
-        model = QStandardItemModel(0, 5, self)
+        model = QStandardItemModel(0, COLUMNS, self)
         model.setHeaderData(PLAYLIST, Qt.Horizontal, "Playlist")
         model.setHeaderData(ARTIST, Qt.Horizontal, "Autor")
-        model.setHeaderData(ALBUM, Qt.Horizontal, "Album")        
-        model.setHeaderData(NTRACKS, Qt.Horizontal, "#")        
+        model.setHeaderData(ALBUM, Qt.Horizontal, "Album")              
         model.setHeaderData(DURATION, Qt.Horizontal, "Dauer")                  
         for playlist in playlists:                                       
             model.insertRow(0)
             model.setData(model.index(0, PLAYLIST), playlist)
             model.setData(model.index(0, ARTIST), playlist.meta.artist)
             model.setData(model.index(0, ALBUM), playlist.meta.album)
-            model.setData(model.index(0, NTRACKS), playlist.meta.ntracks)
             model.setData(model.index(0, DURATION), tools.friendlytime(playlist.meta.duration)) 
 
         filterModel = SortFilterProxyModel()
@@ -103,12 +103,12 @@ class Library(QGroupBox):
         self.rescanButton.setFont(font)
         self.exportButton = QPushButton('EXPORT')        
         self.exportButton.setFont(font)
-        self.rootLineEdit = QLineEdit('')        
-        self.rootLineEdit.setFont(font)                
+        self.exportLineEdit = QLineEdit('')        
+        self.exportLineEdit.setFont(font)                
 
         layout_bottom.addWidget(self.rescanButton)
         layout_bottom.addWidget(self.exportButton)
-        layout_bottom.addWidget(self.rootLineEdit)
+        layout_bottom.addWidget(self.exportLineEdit)
 
         # layout
 
@@ -120,6 +120,8 @@ class Library(QGroupBox):
         self.setLayout(layout)
 
         self.view = view
+        self.model = model
+        self.filter = filterModel
 
 
     def addIcon(self, path, layout):
@@ -141,8 +143,9 @@ class Library(QGroupBox):
         indices = self.view.selectedIndexes()
         if len(indices) == 0:
             return None
-        index = indices[0].row()
-        item = self.view.model().item(index)
+
+        index = self.filter.mapToSource(indices[0])
+        item = self.model.item(index.row())
         playlist = item.data(0)
 
         return playlist

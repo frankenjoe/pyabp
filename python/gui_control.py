@@ -15,7 +15,7 @@ class Control(QGroupBox):
 
     trackPathLabel = None
     trackNumberLabel = None
-    trackPositionSlider = None
+    trackPositionSlider = None    
     trackDurationLabel = None
 
     restartButton = None
@@ -117,7 +117,7 @@ class Control(QGroupBox):
             self.trackNumberLabel.setText(str(track+1) + ' / ' + str(length))               
             self.trackPositionSlider.setMaximum(int(duration))
             self.trackPositionSlider.setValue(int(position))          
-            self.trackDurationLabel.setText(tools.friendlytime(duration))  
+            self.trackDurationLabel.setText(tools.friendlytime(position) + ' / ' + tools.friendlytime(duration))  
     
 
 

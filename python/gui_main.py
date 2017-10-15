@@ -91,7 +91,7 @@ class App(QWidget):
         self.library.exportButton.clicked.connect(self.exportClicked)   
         self.library.rescanButton.clicked.connect(self.rescanClicked)   
         if os.path.exists(self.config.exportPath):
-            self.library.rootLineEdit.setText(self.config.exportPath)  
+            self.library.exportLineEdit.setText(self.config.exportPath)  
         self.library.setVisible(False)       
 
         # control
@@ -138,7 +138,7 @@ class App(QWidget):
 
         if event.type() == QEvent.KeyPress:
            
-            if event.key() == Qt.Key_Space and not self.library.isVisible():
+            if event.key() == Qt.Key_Space and not self.library.searchLineEdit.hasFocus() and not self.library.exportLineEdit.hasFocus():
                 self.player.toggle()
                 return 1
 
@@ -172,7 +172,7 @@ class App(QWidget):
         if self.player.playlist:
             self.config.currentPath = self.player.playlist.root
 
-        self.config.exportPath = self.library.rootLineEdit.text()            
+        self.config.exportPath = self.library.exportLineEdit.text()            
         self.config.isPlaying = self.player.isPlay
         self.config.fullScreen = self.library.isVisible()    
         
@@ -191,8 +191,9 @@ class App(QWidget):
 
     def libraryClicked(self, index):
 
-        playlist = self.library.getPlaylist()                
-        self.loadPlaylist(playlist, False)
+        playlist = self.library.getPlaylist() 
+        if playlist:               
+            self.loadPlaylist(playlist, False)
 
 
     def volumeChanged(self, value):
@@ -207,7 +208,7 @@ class App(QWidget):
 
     def exportClicked(self):
 
-        root = self.library.rootLineEdit.text()
+        root = self.library.exportLineEdit.text()
         if os.path.exists(root):
             playlist = self.library.getPlaylist()
             if playlist:            
