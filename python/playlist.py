@@ -35,7 +35,7 @@ class Playlist:
             count = count + 1
 
 
-    def print(self, n_files=5):
+    def print(self, n_files=3):
 
         print('-'*30)
         print(self.root);

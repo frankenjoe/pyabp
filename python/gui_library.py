@@ -10,42 +10,71 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QPushButton, QG
 from playlist import Playlist
 import tools
 
- 
-class Library(QGroupBox):
- 
 
-    PLAYLIST, ARTIST, ALBUM, NTRACKS, DURATION = range(5)
+PLAYLIST, ARTIST, ALBUM, NTRACKS, DURATION = range(5)
+
+ 
+class SortFilterProxyModel(QSortFilterProxyModel):
+
+
+    def filterAcceptsRow(self, sourceRow, sourceParent):        
+
+        pattern = self.filterRegExp().pattern()
+
+        if pattern != '':
+            
+            artist = self.sourceModel().data(self.sourceModel().index(sourceRow, ARTIST, sourceParent))
+            album = self.sourceModel().data(self.sourceModel().index(sourceRow, ALBUM, sourceParent))
+            
+            return pattern in artist.lower() or pattern in album.lower()
+
+        else:
+
+            #return super(SortFilterProxyModel, self).filterAcceptsRow(sourceRow, sourceParent)
+            return True
+
+
+class Library(QGroupBox):
+     
 
     view = None
+    filterLabel = None
+    filterLineEdit = None
     rescanButton = None
     exportButton = None    
-    rootLineEdit = None
+    rootLineEdit = None    
+
  
     def __init__(self, playlists, fontSize = 16):
 
         super().__init__()              
 
-        self.initUI(playlists, fontSize)     
-        
+        self.initUI(playlists, fontSize) 
+      
 
     def initUI(self, playlists, fontSize):
         
         font = QFont()
-        font.setPixelSize(fontSize)
+        font.setPixelSize(fontSize)        
+
+        # list
 
         model = QStandardItemModel(0, 5, self)
-        model.setHeaderData(self.PLAYLIST, Qt.Horizontal, "Playlist")
-        model.setHeaderData(self.ARTIST, Qt.Horizontal, "Autor")
-        model.setHeaderData(self.ALBUM, Qt.Horizontal, "Album")        
-        model.setHeaderData(self.NTRACKS, Qt.Horizontal, "#")        
-        model.setHeaderData(self.DURATION, Qt.Horizontal, "Dauer")                  
+        model.setHeaderData(PLAYLIST, Qt.Horizontal, "Playlist")
+        model.setHeaderData(ARTIST, Qt.Horizontal, "Autor")
+        model.setHeaderData(ALBUM, Qt.Horizontal, "Album")        
+        model.setHeaderData(NTRACKS, Qt.Horizontal, "#")        
+        model.setHeaderData(DURATION, Qt.Horizontal, "Dauer")                  
         for playlist in playlists:                                       
             model.insertRow(0)
-            model.setData(model.index(0, self.PLAYLIST), playlist)
-            model.setData(model.index(0, self.ARTIST), playlist.meta.artist)
-            model.setData(model.index(0, self.ALBUM), playlist.meta.album)
-            model.setData(model.index(0, self.NTRACKS), playlist.meta.ntracks)
-            model.setData(model.index(0, self.DURATION), tools.friendlytime(playlist.meta.duration)) 
+            model.setData(model.index(0, PLAYLIST), playlist)
+            model.setData(model.index(0, ARTIST), playlist.meta.artist)
+            model.setData(model.index(0, ALBUM), playlist.meta.album)
+            model.setData(model.index(0, NTRACKS), playlist.meta.ntracks)
+            model.setData(model.index(0, DURATION), tools.friendlytime(playlist.meta.duration)) 
+
+        filterModel = SortFilterProxyModel()
+        filterModel.setSourceModel(model)           
 
         view = QTreeView()        
         view.setFont(font)
@@ -53,11 +82,25 @@ class Library(QGroupBox):
         view.setAlternatingRowColors(True)
         view.setSortingEnabled(True)        
         view.setEditTriggers(QAbstractItemView.NoEditTriggers)                    
-        view.setModel(model)                   
+        view.setModel(filterModel)                   
         for i in range(model.columnCount()-1,0,-1):
             view.sortByColumn(i, Qt.AscendingOrder)     
             view.resizeColumnToContents(i)
         view.hideColumn(0)      
+
+        # filter
+
+        self.filterLabel = QLabel('Filter')
+        self.filterLabel.setFont(font)
+        self.filterLineEdit = QLineEdit('')        
+        self.filterLineEdit.setFont(font)                        
+        self.filterLineEdit.textChanged.connect(filterModel.setFilterFixedString)
+
+        layout_top = QHBoxLayout()
+        layout_top.addWidget(self.filterLabel)
+        layout_top.addWidget(self.filterLineEdit)
+
+        # export
 
         self.rescanButton = QPushButton('RESCAN')        
         self.rescanButton.setFont(font)
@@ -71,7 +114,10 @@ class Library(QGroupBox):
         layout_bottom.addWidget(self.exportButton)
         layout_bottom.addWidget(self.rootLineEdit)
 
+        # layout
+
         layout = QVBoxLayout()
+        layout.addLayout(layout_top)
         layout.addWidget(view)
         layout.addLayout(layout_bottom)
 

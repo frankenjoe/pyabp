@@ -56,7 +56,7 @@ class Control(QGroupBox):
         self.libraryButton = self.addButton('../pics/list.png', layout_bottom)        
         self.previousButton = self.addButton('../pics/previous.png', layout_bottom)
         self.playButton = self.addButton('../pics/play.png', layout_bottom)
-        self.stopButton = self.addButton('../pics/stop.png', layout_bottom)
+        self.stopButton = self.addButton('../pics/pause.png', layout_bottom)
         self.nextButton = self.addButton('../pics/next.png', layout_bottom)        
         self.restartButton = self.addButton('../pics/restart.png', layout_bottom)
 

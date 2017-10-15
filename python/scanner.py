@@ -36,9 +36,11 @@ class Scanner:
 
                 metapath = os.path.join(root, 'meta.json')
                 if os.path.exists(metapath) and not force:
+                    #print('load ' + root)
                     playlist.meta = Meta()
-                    playlist.meta.read(metapath)
-                else:                               
+                    playlist.meta.read(metapath)                    
+                else:                    
+                    print('scan ' + root)           
                     meta = Meta()        
                     mp3path = os.path.join(root, files[0])         
                     try:
@@ -60,6 +62,8 @@ class Scanner:
 
                     meta.write(metapath)
                     playlist.meta = meta
+
+                    playlist.print()
 
                 return playlist
 

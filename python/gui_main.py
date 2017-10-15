@@ -118,7 +118,7 @@ class App(QWidget):
 
         if event.type() == QEvent.KeyPress:
            
-            if event.key() == Qt.Key_Space:
+            if event.key() == Qt.Key_Space and not self.library.isVisible():
                 self.player.toggle()
                 return 1
 
