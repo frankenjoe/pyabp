@@ -29,18 +29,15 @@ class Control(QGroupBox):
     volumeSlider = None
 
  
-    def __init__(self, fontSize = 16):
+    def __init__(self, font=QFont()):
 
         super().__init__()              
 
-        self.initUI(fontSize)     
+        self.initUI(font)     
 
 
-    def initUI(self, fontSize):
+    def initUI(self, font):
 
-        font = QFont()
-        font.setPixelSize(fontSize)
-       
         layout_top = QHBoxLayout()
         layout_center = QHBoxLayout()
         layout_bottom = QHBoxLayout()

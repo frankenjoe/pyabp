@@ -38,24 +38,21 @@ class Library(QGroupBox):
      
 
     view = None
-    filterLabel = None
-    filterLineEdit = None
+    searchIcon = None
+    searchLineEdit = None
     rescanButton = None
     exportButton = None    
     rootLineEdit = None    
 
  
-    def __init__(self, playlists, fontSize = 16):
+    def __init__(self, playlists, font=QFont()):
 
         super().__init__()              
 
-        self.initUI(playlists, fontSize) 
+        self.initUI(playlists, font) 
       
 
-    def initUI(self, playlists, fontSize):
-        
-        font = QFont()
-        font.setPixelSize(fontSize)        
+    def initUI(self, playlists, font):           
 
         # list
 
@@ -90,17 +87,17 @@ class Library(QGroupBox):
 
         # filter
 
-        self.filterLabel = QLabel('Filter')
-        self.filterLabel.setFont(font)
-        self.filterLineEdit = QLineEdit('')        
-        self.filterLineEdit.setFont(font)                        
-        self.filterLineEdit.textChanged.connect(filterModel.setFilterFixedString)
+        layout_top = QHBoxLayout()   
 
-        layout_top = QHBoxLayout()
-        layout_top.addWidget(self.filterLabel)
-        layout_top.addWidget(self.filterLineEdit)
+        self.searchIcon = self.addIcon('../pics/lense.png', layout_top)
+        self.searchLineEdit = QLineEdit('')        
+        self.searchLineEdit.setFont(font)                        
+        self.searchLineEdit.textChanged.connect(filterModel.setFilterFixedString)
+        layout_top.addWidget(self.searchLineEdit)
 
         # export
+
+        layout_bottom = QHBoxLayout()
 
         self.rescanButton = QPushButton('RESCAN')        
         self.rescanButton.setFont(font)
@@ -109,7 +106,6 @@ class Library(QGroupBox):
         self.rootLineEdit = QLineEdit('')        
         self.rootLineEdit.setFont(font)                
 
-        layout_bottom = QHBoxLayout()
         layout_bottom.addWidget(self.rescanButton)
         layout_bottom.addWidget(self.exportButton)
         layout_bottom.addWidget(self.rootLineEdit)
@@ -124,6 +120,20 @@ class Library(QGroupBox):
         self.setLayout(layout)
 
         self.view = view
+
+
+    def addIcon(self, path, layout):
+        
+        button = QPushButton() 
+        button.setFlat(True)           
+        icon = QIcon(path)    
+        button.setIcon(icon)
+        size = icon.availableSizes()[0]
+        button.setFixedSize(size)
+        button.setIconSize(size)
+        layout.addWidget(button)
+
+        return button
 
     
     def getPlaylist(self):

@@ -4,8 +4,6 @@ import warnings
 import shutil
 import glob
 
-from configparser import ConfigParser
-
 from PyQt5.QtGui import (QIcon, QFont)
 from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt, QTime, QEvent)
 from PyQt5.QtGui import QStandardItemModel
@@ -15,18 +13,23 @@ import tools
 from player import Player
 from playlist import Playlist
 from scanner import Scanner
+from config import Config
 
 from gui_library import Library
 from gui_control import Control
 from gui_control_thread import ControlThread
  
+
+CONFFILE = 'pyabp.init'
+TITLE = 'Python Audiobook Player'
+ICONFILE = '../pics/player.ico'
+
+
 class App(QWidget):
  
-    
-    CONFFILE = 'pyabp.init'
-    TITLE = 'Python Audiobook Player'
-    ICONFILE = '../pics/player.ico'
 
+    config = None
+    font = None
     scanner = None
     player = None
     library = None
@@ -43,6 +46,10 @@ class App(QWidget):
 
         qApp.installEventFilter(self) 
 
+        # config
+
+        self.readConfig()
+
         # player    
 
         self.player = Player()
@@ -58,27 +65,38 @@ class App(QWidget):
 
         self.initUI(playlists)     
 
-        # config
+        # play
 
-        self.readConfig(playlists)
+        if os.path.exists(self.config.currentPath):
+            for playlist in playlists:
+                if playlist.root == self.config.currentPath:
+                    self.loadPlaylist(playlist, self.config.isPlaying)                    
+                    break  
         
 
     def initUI(self, playlists):
 
-        self.setWindowTitle(self.TITLE)
-        self.setWindowIcon(QIcon(self.ICONFILE))
+        self.setWindowTitle(TITLE)
+        self.setWindowIcon(QIcon(ICONFILE))
+
+        # font
+
+        font = QFont()
+        font.setPixelSize(self.config.fontSize)
  
         # library
 
-        self.library = Library(playlists)
+        self.library = Library(playlists, font=font)
         self.library.view.doubleClicked.connect(self.libraryClicked)    
         self.library.exportButton.clicked.connect(self.exportClicked)   
         self.library.rescanButton.clicked.connect(self.rescanClicked)   
+        if os.path.exists(self.config.exportPath):
+            self.library.rootLineEdit.setText(self.config.exportPath)  
         self.library.setVisible(False)       
 
         # control
 
-        self.control = Control()
+        self.control = Control(font=font)
         self.control.libraryButton.clicked.connect(self.showFull)
         self.control.restartButton.clicked.connect(self.player.restart)
         self.control.previousButton.clicked.connect(self.player.previous)
@@ -100,7 +118,9 @@ class App(QWidget):
 
         self.setFixedSize(self.layout.sizeHint())
         self.setWindowState(Qt.WindowNoState)   
-        self.show()        
+        self.show()               
+        if self.config.fullScreen:
+            self.showFull()    
       
 
     def showFull(self):
@@ -129,54 +149,42 @@ class App(QWidget):
         return QWidget.eventFilter(self, source, event)
 
 
-    def closeEvent(self, event):
+    def closeEvent(self, event):        
 
         if self.player:        
-    
-            self.writeConfig()
-
             self.player.close()
+
+        self.writeConfig()
 
         event.accept()         
 
 
-    def readConfig(self, playlists):
+    def readConfig(self):
+        
+        self.config = Config()
 
-        config = ConfigParser()
-        if os.path.exists(self.CONFFILE):
-            config.read(self.CONFFILE)
-            root = config['DEFAULT']['root']
-            export = config['DEFAULT']['export']
-            if os.path.exists(export):
-                self.library.rootLineEdit.setText(export)
-            play = False if int(config['DEFAULT']['play']) <= 0 else True            
-            for playlist in playlists:
-                if playlist.root == root:
-                    self.loadPlaylist(playlist, play)                    
-                    break   
-            full = False if int(config['DEFAULT']['full']) <= 0 else True
-            if full:
-                self.showFull()
+        if os.path.exists(CONFFILE):            
+            self.config.read(CONFFILE)          
 
 
     def writeConfig(self):
-
-        config = ConfigParser()
+        
         if self.player.playlist:
-            root = self.player.playlist.root
-            export = self.library.rootLineEdit.text()            
-            play = 1 if self.player.isPlay else 0
-            full = 1 if self.library.isVisible() else 0
-            config['DEFAULT'] = { 'root' : root, 'play' : play, 'export' : export, 'full' : full }
-            with open(self.CONFFILE, 'w') as fp:
-                config.write(fp)
+            self.config.currentPath = self.player.playlist.root
+
+        self.config.exportPath = self.library.rootLineEdit.text()            
+        self.config.isPlaying = self.player.isPlay
+        self.config.fullScreen = self.library.isVisible()    
+        
+        self.config.write(CONFFILE)
+
 
     def loadPlaylist(self, playlist, play):
         
         playlist.print()
         self.player.load(playlist)   
         self.control.volumeSlider.setValue(playlist.meta.volume)
-        self.setWindowTitle(self.TITLE + ' [ ' + playlist.meta.artist + ' - ' + playlist.meta.album + ' ]') 
+        self.setWindowTitle(TITLE + ' [ ' + playlist.meta.artist + ' - ' + playlist.meta.album + ' ]') 
         if play:
             self.player.play()   
  
