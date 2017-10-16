@@ -56,7 +56,7 @@ def askUser(text, parent):
 
 def getroot():	
 	if islinux():
-		confpath = '../mpd/mpd.conf'
+		confpath = '~/.config/mpd/mpd.conf'
 		root = os.path.expanduser(readconf(confpath, 'music_directory'))    
 	else:
 		confpath = '..\\mpd\\mpd.conf'
