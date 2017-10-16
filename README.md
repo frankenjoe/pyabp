@@ -1,14 +1,14 @@
 # pyabp
 
-A Python Audiobook Player
+Python Audiobook Player
 
 # Dependencies
 
-pip install pyqt5
+pip3 install pyqt5 (or: sudo apt-get install python3-pyqt5)
 
-pip install tinytag
+pip3 install tinytag
 
-pip install python-mpd2
+pip3 install python-mpd2
 
 # Windows
 
@@ -16,12 +16,16 @@ copy https://www.musicpd.org/download/win32/0.20.10/mpd.exe to .\mpd
 
 edit .\mpd\mpd.conf and set 'music_directory'
 
-run mpd.cmd
+mpd.cmd
 
-run pyabp.cmd
+pyabp.cmd
 
 # Linux
 
-run ./pyabp.sh
+copy /etc/mpd.conf to ~/.config/mpd/mpd.conf and set 'music_directory'
+
+sudo systemctl start mpd
+
+./pyabp.sh
 
 
