@@ -1,4 +1,5 @@
 import os
+import errno
 import csv
 import sys
 import warnings
@@ -7,8 +8,11 @@ import string
 import platform
 import datetime
 import shutil
+import psutil
 
-from PyQt5.QtWidgets import (QMessageBox)
+
+INVALID = -1
+
 
 def islinux():
 	return platform.system().startswith('Linux')
@@ -37,6 +41,15 @@ def friendlytime(time):
     return str(datetime.timedelta(seconds=int(time)))
 
 
+def remfile(path):
+
+    try:
+        os.remove(path)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise
+
+
 def copyfile(src, dst):
     try:
         shutil.copy(src, dst)    
@@ -46,19 +59,72 @@ def copyfile(src, dst):
         print('Error: %s' % e.strerror)
 
 
-def askUser(text, parent):
-    reply = QMessageBox.question(parent, 'Question', text, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-    if reply == QMessageBox.No:
-        return False
-    else:
-        return True
+def getroot(confPath):	
+
+    confpath = os.path.expanduser(confPath)
+    root = readconf(confpath, 'music_directory')
+    
+    return root
 
 
-def getroot():	
-	if islinux():
-		confpath = os.path.expanduser('~/.config/mpd/mpd.conf')
-		root = os.path.expanduser(readconf(confpath, 'music_directory'))    
-	else:
-		confpath = '..\\mpd\\mpd.conf'
-		root = readconf(confpath, 'music_directory') 	
-	return root
+def procname(pid):
+    
+    if pid != INVALID:
+
+        try:
+            p = psutil.Process(pid)
+            return p.name()
+        except Exception as e:
+            print(e)
+
+    return None
+
+
+def procid(name):
+
+    pids = psutil.pids()
+
+    for pid in pids:
+        try:
+            p = psutil.Process(pid)
+            if p.name() == name:
+                return pid
+        except Exception as e:
+            print(e)
+
+    return INVALID
+
+
+def procstart(path, args=[]):
+
+    path = os.path.realpath(path)
+    dir = os.path.dirname(path)
+    name = os.path.basename(path)
+
+    print('start process ' + name)
+
+    pid = procid(name)
+
+    if pid == INVALID:
+        try:
+            p = psutil.Popen([path] + args, cwd=dir)
+            pid = p.pid
+        except Exception as e:
+            print(e)
+            return INVALID
+    
+    return pid
+    
+
+def procstop(pid):
+
+    name = procname(pid)   
+
+    if name:
+
+        print('stop process ' + name)
+    
+        try:
+            psutil.Process(pid).terminate()
+        except Exception as e:
+            print(e)    

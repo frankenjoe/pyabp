@@ -10,13 +10,13 @@ pip3 install tinytag
 
 pip3 install python-mpd2
 
+pip3 install psutil
+
 # Windows
 
 copy https://www.musicpd.org/download/win32/0.20.10/mpd.exe to .\mpd
 
 edit .\mpd\mpd.conf and set 'music_directory'
-
-mpd.cmd
 
 pyabp.cmd
 

@@ -12,7 +12,9 @@ from scanner import Scanner
 class Player:
 
 
-    root = ''
+    root = '.'
+    host = '127.0.0.1'
+    port = 6600
     playlist = None
     client = None
     isPlay = False
@@ -21,14 +23,17 @@ class Player:
     def connect(self, root, host='127.0.0.1', port=6600):
 
         self.root = root
-        return self.init(host, port)       
-        
+        self.host = host
+        self.port = port
 
-    def init(self, host='127.0.0.1', port=6600):
+        return self.init()
+           
+            
+    def init(self):
 
         try:            
             self.client = MPDClient()
-            self.client.connect(host, port)            
+            self.client.connect(self.host, self.port)  
             return True
 
         except:

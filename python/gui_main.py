@@ -14,13 +14,14 @@ from player import Player
 from playlist import Playlist
 from scanner import Scanner
 from config import Config
+from server import Server
 
 from gui_library import Library
 from gui_control import Control
 from gui_control_thread import ControlThread
  
 
-CONFFILE = 'pyabp.init'
+CONFFILE = '../pyabp.init'
 TITLE = 'Python Audiobook Player'
 ICONFILE = '../pics/player.ico'
 
@@ -31,6 +32,7 @@ class App(QWidget):
     config = None
     font = None
     scanner = None
+    server = None
     player = None
     library = None
     control = None
@@ -38,7 +40,7 @@ class App(QWidget):
     layout = None      
 
 
-    def __init__(self, root, ext='.mp3', force=False):
+    def __init__(self, force=False):
 
         super().__init__()    
 
@@ -49,6 +51,14 @@ class App(QWidget):
         # config
 
         self.readConfig()
+        root = tools.getroot(self.config.confPath)  
+        print('root =', root)
+        
+        # mpd
+
+        self.server = Server()
+        if self.config.startMpd:
+            self.server.start('..\\mpd\\mpd.exe', conf='mpd.conf')
 
         # player    
 
@@ -59,7 +69,7 @@ class App(QWidget):
         # playlists
 
         self.scanner = Scanner()
-        playlists = self.scanner.scan(root, ext=ext, force=force)
+        playlists = self.scanner.scan(root, ext='.mp3', force=force)
 
         # init
 
@@ -67,9 +77,9 @@ class App(QWidget):
 
         # play
 
-        if os.path.exists(self.config.currentPath):
+        if os.path.exists(self.config.lastDir):
             for playlist in playlists:
-                if playlist.root == self.config.currentPath:
+                if playlist.root == self.config.lastDir:
                     self.loadPlaylist(playlist, self.config.isPlaying)                    
                     break  
         
@@ -152,9 +162,10 @@ class App(QWidget):
     def closeEvent(self, event):        
 
         self.writeConfig()
-
-        if self.player:        
-            self.player.close()
+      
+        self.player.close()
+        if self.config.startMpd:
+            self.server.stop()
 
         event.accept()         
 
@@ -164,13 +175,17 @@ class App(QWidget):
         self.config = Config()
 
         if os.path.exists(CONFFILE):            
-            self.config.read(CONFFILE)          
+            self.config.read(CONFFILE)   
 
+        print('-'*30)
+        self.config.print()       
+        print('-'*30)
+        
 
     def writeConfig(self):
         
         if self.player.playlist:
-            self.config.currentPath = self.player.playlist.root
+            self.config.lastDir = self.player.playlist.root
 
         self.config.exportPath = self.library.exportLineEdit.text()            
         self.config.isPlaying = self.player.isPlay
@@ -193,7 +208,7 @@ class App(QWidget):
 
         playlist = self.library.getPlaylist() 
         if playlist:               
-            self.loadPlaylist(playlist, False)
+            self.loadPlaylist(playlist, self.player.isPlay)
 
 
     def volumeChanged(self, value):
@@ -216,7 +231,7 @@ class App(QWidget):
                 files = glob.glob(os.path.join(root, 'pyabp*'))
                 count = 1
                 if len(files) > 0:
-                    reply = tools.askUser('Delete existing playlist (otherwise files are appended)?', self)
+                    reply = self.askUser('Delete existing playlist (otherwise files are appended)?', self)
                     if not reply:
                         count = len(files) + 1
                     else:                    
@@ -233,11 +248,20 @@ class App(QWidget):
         if playlist:
             self.scanner.scandir(playlist.root, playlist.ext, True)
 
+
+    def askUser(text, parent):
+
+        reply = QMessageBox.question(parent, 'Question', text, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.No:
+            return False
+        else:
+            return True
+
  
 if __name__ == '__main__':
-
-    root = tools.getroot()  
     
     app = QApplication(sys.argv)
-    ex = App(root)
+    ex = App()
     sys.exit(app.exec_())
+
+    tools.procstop(pid)

@@ -58,12 +58,12 @@ class Meta:
                           
 
     def print(self):        
-        print('artist=' + self.artist)
-        print('album=' + self.album)
-        print('track=' + str(self.track+1) + '/' + str(self.ntracks))        
-        print('position=' + tools.friendlytime(self.position))
-        print('total=' + tools.friendlytime(self.duration))
-        print('volume=' + str(self.volume))
+        print('artist =', self.artist)
+        print('album =', self.album)
+        print('track =', self.track+1, '/', self.ntracks)
+        print('position =', tools.friendlytime(self.position))
+        print('total =', tools.friendlytime(self.duration))
+        print('volume =', self.volume)
 
 
 if __name__ == '__main__':

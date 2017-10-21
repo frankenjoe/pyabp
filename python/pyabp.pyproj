@@ -33,6 +33,7 @@
     <Compile Include="player.py" />
     <Compile Include="playlist.py" />
     <Compile Include="scanner.py" />
+    <Compile Include="server.py" />
     <Compile Include="tools.py" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
