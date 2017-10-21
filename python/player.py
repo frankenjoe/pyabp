@@ -12,7 +12,6 @@ from scanner import Scanner
 class Player:
 
 
-    root = '.'
     host = '127.0.0.1'
     port = 6600
     playlist = None
@@ -20,9 +19,8 @@ class Player:
     isPlay = False
 
 
-    def connect(self, root, host='127.0.0.1', port=6600):
+    def connect(self, host='127.0.0.1', port=6600):
 
-        self.root = root
         self.host = host
         self.port = port
 
@@ -82,13 +80,9 @@ class Player:
             self.playlist = playlist
             self.client.clear()        
 
-            for path in playlist.files:
-                if self.root and path.startswith(self.root):
-                    path = path[len(self.root):]
-                    if path.startswith('\\'):
-                        path = path[1:]
-                    path = path.replace('\\', '/')
-                    self.client.add(path)
+            for file in playlist.files:
+                path = os.path.join(playlist.bookDir, file).replace('\\', '/') 
+                self.client.add(path)
 
             self.volume(playlist.meta.volume)
 
@@ -270,7 +264,7 @@ class Player:
         if not self.isPlay:
 
             track = self.playlist.meta.track
-            path = self.playlist.files[track]
+            path = os.path.join(self.playlist.rootDir, self.playlist.bookDir, self.playlist.files[track])
             length = len(self.playlist.files)
             position = self.playlist.meta.position           
                
@@ -301,10 +295,11 @@ class Player:
 
 if __name__ == '__main__':
     
-    root = tools.getroot()
+    root = tools.getroot('..\\mpd\\mpd.conf')
+    sub = 'Audiobooks'
 
     scanner = Scanner()
-    playlists = scanner.scan(root)
+    playlists = scanner.scan(root, sub)
 
     if len(playlists) > 0:
         
@@ -313,7 +308,7 @@ if __name__ == '__main__':
     
         player = Player()
 
-        if player.connect(root):
+        if player.connect():
             player.load(playlist)    
             player.play()    
             time.sleep(3)

@@ -43,8 +43,8 @@ class Library(QGroupBox):
     searchIcon = None
     searchLineEdit = None
     rescanButton = None
+    rescan1Button = None
     exportButton = None    
-    exportLineEdit = None    
 
  
     def __init__(self, playlists, font=QFont()):
@@ -99,16 +99,9 @@ class Library(QGroupBox):
 
         layout_bottom = QHBoxLayout()
 
-        self.rescanButton = QPushButton('RESCAN')        
-        self.rescanButton.setFont(font)
-        self.exportButton = QPushButton('EXPORT')        
-        self.exportButton.setFont(font)
-        self.exportLineEdit = QLineEdit('')        
-        self.exportLineEdit.setFont(font)                
-
-        layout_bottom.addWidget(self.rescanButton)
-        layout_bottom.addWidget(self.exportButton)
-        layout_bottom.addWidget(self.exportLineEdit)
+        self.exportButton = self.addButton('../pics/save.png', layout_bottom) 
+        self.rescan1Button = self.addButton('../pics/rescan1.png', layout_bottom)         
+        self.rescanButton = self.addButton('../pics/rescan.png', layout_bottom) 
 
         # layout
 
@@ -132,6 +125,19 @@ class Library(QGroupBox):
         button.setIcon(icon)
         size = icon.availableSizes()[0]
         button.setFixedSize(size)
+        button.setIconSize(size)
+        layout.addWidget(button)
+
+        return button
+
+
+    def addButton(self, path, layout):
+
+        button = QPushButton()
+        icon = QIcon(path)        
+        button.setIcon(icon)
+        size = icon.availableSizes()[0]
+        button.setFixedHeight(size.height())
         button.setIconSize(size)
         layout.addWidget(button)
 

@@ -51,25 +51,23 @@ class App(QWidget):
         # config
 
         self.readConfig()
-        root = tools.getroot(self.config.confPath)  
-        print('root =', root)
         
         # mpd
 
-        self.server = Server()
         if self.config.startMpd:
-            self.server.start('..\\mpd\\mpd.exe', conf='mpd.conf')
+            self.server = Server()
+            self.server.start('..\\mpd\\mpd.exe', conf=os.path.realpath(self.config.confPath))
 
         # player    
 
         self.player = Player()
-        self.player.connect(root)
+        self.player.connect()
         self.player.update()
 
         # playlists
 
         self.scanner = Scanner()
-        playlists = self.scanner.scan(root, ext='.mp3', force=force)
+        playlists = self.scanner.scan(self.config.rootDir, self.config.subDir, force=force)
 
         # init
 
@@ -77,9 +75,9 @@ class App(QWidget):
 
         # play
 
-        if os.path.exists(self.config.lastDir):
+        if os.path.exists(os.path.join(self.config.rootDir, self.config.lastDir)):
             for playlist in playlists:
-                if playlist.root == self.config.lastDir:
+                if playlist.bookDir == self.config.lastDir:
                     self.loadPlaylist(playlist, self.config.isPlaying)                    
                     break  
         
@@ -100,8 +98,9 @@ class App(QWidget):
         self.library.view.doubleClicked.connect(self.libraryClicked)    
         self.library.exportButton.clicked.connect(self.exportClicked)   
         self.library.rescanButton.clicked.connect(self.rescanClicked)   
-        if os.path.exists(self.config.exportPath):
-            self.library.exportLineEdit.setText(self.config.exportPath)  
+        self.library.rescan1Button.clicked.connect(self.rescan1Clicked) 
+        if os.path.exists(self.config.exportDir):
+            self.library.exportLineEdit.setText(self.config.exportDir)  
         self.library.setVisible(False)       
 
         # control
@@ -164,7 +163,7 @@ class App(QWidget):
         self.writeConfig()
       
         self.player.close()
-        if self.config.startMpd:
+        if self.server:
             self.server.stop()
 
         event.accept()         
@@ -185,9 +184,8 @@ class App(QWidget):
     def writeConfig(self):
         
         if self.player.playlist:
-            self.config.lastDir = self.player.playlist.root
+            self.config.lastDir = self.player.playlist.bookDir
 
-        self.config.exportPath = self.library.exportLineEdit.text()            
         self.config.isPlaying = self.player.isPlay
         self.config.fullScreen = self.library.isVisible()    
         
@@ -223,7 +221,7 @@ class App(QWidget):
 
     def exportClicked(self):
 
-        root = self.library.exportLineEdit.text()
+        root = self.config.exportDir
         if os.path.exists(root):
             playlist = self.library.getPlaylist()
             if playlist:            
@@ -231,7 +229,7 @@ class App(QWidget):
                 files = glob.glob(os.path.join(root, 'pyabp*'))
                 count = 1
                 if len(files) > 0:
-                    reply = self.askUser('Delete existing playlist (otherwise files are appended)?', self)
+                    reply = self.askUser('Delete existing playlist (otherwise files are appended)?')
                     if not reply:
                         count = len(files) + 1
                     else:                    
@@ -244,14 +242,19 @@ class App(QWidget):
 
     def rescanClicked(self):
         
+        self.scanner.scan(self.config.rootDir, self.config.subDir, True)
+
+
+    def rescan1Clicked(self):
+        
         playlist = self.library.getPlaylist()
         if playlist:
-            self.scanner.scandir(playlist.root, playlist.ext, True)
+            self.scanner.scandir(os.path.join(playlist.rootDir, playlist.bookDir), playlist.bookDir, True)
 
 
-    def askUser(text, parent):
+    def askUser(self, text):
 
-        reply = QMessageBox.question(parent, 'Question', text, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = QMessageBox.question(self, 'Question', text, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.No:
             return False
         else:

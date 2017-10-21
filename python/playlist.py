@@ -9,10 +9,11 @@ from meta import Meta
 class Playlist:
 
 
-    root = None        
-    ext = '.mp3'
-    meta = None    
+    rootDir = None     
+    bookDir = None   
     files = []
+    meta = None    
+
 
     def write(self, path):
 
@@ -20,14 +21,14 @@ class Playlist:
             with open(path, 'w') as fp:		            
                 for file in self.files:
                     name, ext = os.path.splitext(file)                
-                    path = os.path.join(self.root, file)                
+                    path = os.path.join(self.rootDir, self.bookDir, file)                
                     fp.write(path + '\n')
 
 
     def export(self, root, count = 1):
 
         for file in self.files:
-            src = os.path.join(self.root, file)
+            src = os.path.join(self.rootDir, self.bookDir, file)
             name, ext = os.path.splitext(src)
             dst = os.path.join(root, 'pyabp' + str(count).zfill(4)) + ext
             print('copy ' + src + ' > ' + dst)
@@ -35,19 +36,17 @@ class Playlist:
             count = count + 1
 
 
-    def print(self, n_files=3):
+    def print(self):
 
         print('-'*30)
-        print(self.root);
+        print(self.bookDir)
         print('-'*30)                
         if self.meta:
-            self.meta.print()                
-        print('-'*30)         
-        for i in range(0,min(n_files,len(self.files))):
-            print(os.path.basename(self.files[i]))
-        if len(self.files) > n_files:
-            print('...')
-            print(os.path.basename(self.files[-1]))
+            self.meta.print()     
+        print('-'*30)              
+        print(self.files[0])
+        print('...')
+        print(self.files[-1])
         print('-'*30)        
 
 
