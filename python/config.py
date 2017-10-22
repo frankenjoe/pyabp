@@ -16,6 +16,9 @@ class Config:
     isPlaying = False
     fullScreen = False
     fontSize = 16        
+    scanAll = False
+    scanNew = True
+    scanModified = True
 
 
     def read(self, path):
@@ -37,6 +40,10 @@ class Config:
                 self.fullScreen = False if int(config['GUI']['fullScreen']) <= 0 else True
                 self.fontSize = int(config['GUI']['fontSize'])
 
+                self.scanAll = False if int(config['SCAN']['scanAll']) <= 0 else True 
+                self.scanNew = False if int(config['SCAN']['scanNew']) <= 0 else True 
+                self.scanModified = False if int(config['SCAN']['scanModified']) <= 0 else True                
+
             except:
                 print('could not read config file "' + path + '"')
 
@@ -56,6 +63,11 @@ class Config:
             'isPlaying' : 1 if self.isPlaying else 0, 
             'fullScreen' : 1 if self.fullScreen else 0,
             'fontSize' : self.fontSize ,
+        }        
+        config['SCAN'] = { 
+            'scanAll' : 1 if self.scanAll else 0, 
+            'scanNew' : 1 if self.scanNew else 0,
+            'scanModified' : 1 if self.scanModified else 0,
         }
         with open(path, 'w') as fp:
             config.write(fp)
@@ -72,6 +84,9 @@ class Config:
         print('isPlaying =', self.isPlaying)
         print('fullScreen =', self.fullScreen)
         print('fontSize =', self.fontSize)
+        print('scanAll =', self.scanAll)
+        print('scanNew =', self.scanNew)
+        print('scanModified =', self.scanModified)
 
 
 if __name__ == '__main__':
@@ -89,6 +104,9 @@ if __name__ == '__main__':
     config.isPlaying = True
     config.fullScreen = True
     config.fontSize = 12
+    config.scanAll = True
+    config.scanNew = False
+    config.scanModified = False
     config.write(path)
 
     config2 = Config()

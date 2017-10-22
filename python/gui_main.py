@@ -40,7 +40,7 @@ class App(QWidget):
     layout = None      
 
 
-    def __init__(self, force=False):
+    def __init__(self):
 
         super().__init__()    
 
@@ -67,7 +67,7 @@ class App(QWidget):
         # playlists
 
         self.scanner = Scanner()
-        playlists = self.scanner.scan(self.config.rootDir, self.config.subDir, force=force)
+        playlists = self.scanner.scan(self.config)
 
         # init
 
@@ -97,8 +97,6 @@ class App(QWidget):
         self.library = Library(playlists, font=font)
         self.library.view.doubleClicked.connect(self.libraryClicked)    
         self.library.exportButton.clicked.connect(self.exportClicked)   
-        self.library.rescanButton.clicked.connect(self.rescanClicked)   
-        self.library.rescan1Button.clicked.connect(self.rescan1Clicked) 
         if os.path.exists(self.config.exportDir):
             self.library.exportLineEdit.setText(self.config.exportDir)  
         self.library.setVisible(False)       
@@ -114,6 +112,7 @@ class App(QWidget):
         self.control.nextButton.clicked.connect(self.player.next)
         self.control.volumeSlider.valueChanged.connect(self.volumeChanged)
         self.control.trackPositionSlider.sliderMoved.connect(self.positionChanged)
+        self.control.trackPositionSlider.setTracking(False)
         self.controlThread = ControlThread(self.player, self.control)               
 
         # main
@@ -238,18 +237,6 @@ class App(QWidget):
                             os.remove(file) 
 
                 playlist.export(root, count)
-
-
-    def rescanClicked(self):
-        
-        self.scanner.scan(self.config.rootDir, self.config.subDir, True)
-
-
-    def rescan1Clicked(self):
-        
-        playlist = self.library.getPlaylist()
-        if playlist:
-            self.scanner.scandir(os.path.join(playlist.rootDir, playlist.bookDir), playlist.bookDir, True)
 
 
     def askUser(self, text):

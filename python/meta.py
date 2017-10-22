@@ -16,6 +16,7 @@ class Meta:
     position = 0
     duration = 0.0
     volume = 50
+    modified = None
 
 
     def read(self, path = None):    
@@ -35,6 +36,7 @@ class Meta:
             self.track = data['track']
             self.position = data['position']
             self.volume = data['volume']
+            self.modified = data['modified']
 
 
     def write(self, path = None):
@@ -45,13 +47,14 @@ class Meta:
         if self.path != None:
 
             data = {}
-            data['album'] = self.album
-            data['artist'] = self.artist            
+            data['artist'] = self.artist  
+            data['album'] = self.album          
             data['ntracks'] = self.ntracks
             data['duration'] = self.duration
             data['track'] = self.track
             data['position'] = self.position
             data['volume'] = self.volume
+            data['modified'] = self.modified
 
             with open(self.path, 'w') as fp:    
                 json.dump(data, fp)
@@ -64,18 +67,22 @@ class Meta:
         print('position =', tools.friendlytime(self.position))
         print('total =', tools.friendlytime(self.duration))
         print('volume =', self.volume)
+        print('modified=', self.modified)
 
 
 if __name__ == '__main__':
 
     meta = Meta()
-    meta.read('meta.json')
-    meta.print()
     meta.album = tools.randstr()
     meta.artist = tools.randstr()
     meta.ntracks = 100
     meta.track = random.randint(0, meta.ntracks-1)
     meta.position = round(random.uniform(0.0,60.0), 1)
     meta.volume = random.randint(0, 100)
-    meta.print()
-    meta.write()
+    meta.modified = 0
+    meta.write('meta.json')
+    
+    meta2 = Meta()
+    meta2.read('meta.json')
+    meta2.print()
+    

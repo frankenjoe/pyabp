@@ -2,10 +2,9 @@ import sys
 import os
 import warnings
 
-from PyQt5.QtGui import (QIcon, QFont)
+from PyQt5.QtGui import (QIcon, QFont, QStandardItemModel)
 from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt, QTime)
-from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QPushButton, QGridLayout, QGroupBox, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView)
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QPushButton, QGridLayout, QGroupBox, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView, QSizePolicy)
 
 from playlist import Playlist
 import tools
@@ -42,8 +41,6 @@ class Library(QGroupBox):
     filter = None
     searchIcon = None
     searchLineEdit = None
-    rescanButton = None
-    rescan1Button = None
     exportButton = None    
 
  
@@ -90,25 +87,23 @@ class Library(QGroupBox):
         layout_top = QHBoxLayout()   
 
         self.searchIcon = self.addIcon('../pics/lense.png', layout_top)
-        self.searchLineEdit = QLineEdit('')        
-        self.searchLineEdit.setFont(font)                        
+        self.searchLineEdit = self.addEdit(font, layout_top)               
         self.searchLineEdit.textChanged.connect(filterModel.setFilterFixedString)
-        layout_top.addWidget(self.searchLineEdit)
+        self.searchLineEdit.setToolTip('Type author or album name to filter library')
 
         # export
 
-        layout_bottom = QHBoxLayout()
+        layout_main = QHBoxLayout()
 
-        self.exportButton = self.addButton('../pics/save.png', layout_bottom) 
-        self.rescan1Button = self.addButton('../pics/rescan1.png', layout_bottom)         
-        self.rescanButton = self.addButton('../pics/rescan.png', layout_bottom) 
+        layout_main.addWidget(view)
+        self.exportButton = self.addButton('../pics/save.png', layout_main, setHeight=False, setWidth=True) 
+        self.exportButton.setToolTip('Export selected playlist (set export folder in <pyabp.init>)')
 
         # layout
 
         layout = QVBoxLayout()
         layout.addLayout(layout_top)
-        layout.addWidget(view)
-        layout.addLayout(layout_bottom)
+        layout.addLayout(layout_main)
 
         self.setLayout(layout)
 
@@ -131,17 +126,30 @@ class Library(QGroupBox):
         return button
 
 
-    def addButton(self, path, layout):
+    def addButton(self, path, layout, setHeight=True, setWidth=False):
 
         button = QPushButton()
         icon = QIcon(path)        
         button.setIcon(icon)
         size = icon.availableSizes()[0]
-        button.setFixedHeight(size.height())
+        if setHeight:
+            button.setFixedHeight(size.height())
+        if setWidth:
+            button.setFixedWidth(size.width())
+        button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         button.setIconSize(size)
         layout.addWidget(button)
 
         return button
+
+
+    def addEdit(self, font, layout):
+
+        edit = QLineEdit('')        
+        edit.setFont(font)                               
+        layout.addWidget(edit)
+
+        return edit
 
     
     def getPlaylist(self):

@@ -46,22 +46,30 @@ class Control(QGroupBox):
         self.trackNumberLabel = self.addLabel('0/0', font, layout_center)
 
         self.trackPositionSlider = QSlider(Qt.Horizontal)
+        self.trackPositionSlider.setToolTip('Move slider to change playback position')
         layout_center.addWidget(self.trackPositionSlider)
 
         self.trackDurationLabel = self.addLabel(tools.friendlytime(0), font, layout_center)
 
-        self.libraryButton = self.addButton('../pics/list.png', layout_bottom)        
+        self.libraryButton = self.addButton('../pics/list.png', layout_bottom)       
+        self.libraryButton.setToolTip('Show/hide library') 
         self.previousButton = self.addButton('../pics/previous.png', layout_bottom)
+        self.previousButton.setToolTip('Jump to previous track')
         self.playButton = self.addButton('../pics/play.png', layout_bottom)
+        self.playButton.setToolTip('Start playback of current track')
         self.stopButton = self.addButton('../pics/pause.png', layout_bottom)
+        self.stopButton.setToolTip('Stop playback of current track')
         self.nextButton = self.addButton('../pics/next.png', layout_bottom)        
+        self.nextButton.setToolTip('Jump to next track')
         self.restartButton = self.addButton('../pics/restart.png', layout_bottom)
+        self.restartButton.setToolTip('Jump to first track')
 
         self.volumeIcon = self.addIcon('../pics/volume.png', layout_bottom)        
         self.volumeSlider = QSlider(Qt.Horizontal)  
         self.volumeSlider.setFixedWidth(75)
         self.volumeSlider.setMaximum(100)
         self.volumeSlider.setSingleStep(10)
+        self.volumeSlider.setToolTip('Move slider to adjust playback volume')
         layout_bottom.addWidget(self.volumeSlider)
 
         layout = QVBoxLayout()
