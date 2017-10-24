@@ -146,8 +146,12 @@ class App(QWidget):
 
         if event.type() == QEvent.KeyPress:
            
-            if event.key() == Qt.Key_Space and not self.library.searchLineEdit.hasFocus() and not self.library.exportLineEdit.hasFocus():
+            if event.key() == Qt.Key_Space and not self.library.searchLineEdit.hasFocus():
                 self.player.toggle()
+                return 1
+
+            if event.key() == Qt.Key_F11:
+                self.showFull()
                 return 1
 
             elif event.key() == Qt.Key_Escape:
