@@ -146,15 +146,35 @@ class App(QWidget):
 
         if event.type() == QEvent.KeyPress:
            
-            if event.key() == Qt.Key_Space and not self.library.searchLineEdit.hasFocus():
-                self.player.toggle()
-                return 1
+            if not self.library.searchLineEdit.hasFocus():
 
-            if event.key() == Qt.Key_F11:
-                self.showFull()
-                return 1
+                if event.key() == Qt.Key_Space:
+                    self.player.toggle()
+                    return 1
 
-            elif event.key() == Qt.Key_Escape:
+                if event.key() == Qt.Key_Return:
+                    self.showFull()
+                    return 1
+
+                if event.key() == Qt.Key_P:
+                    self.player.previous()
+                    return 1
+
+                if event.key() == Qt.Key_N:
+                    self.player.next()
+                    return 1
+
+                if event.key() == Qt.Key_Plus:                    
+                    value = min(self.control.volumeSlider.value()+5,100) 
+                    self.control.volumeSlider.setValue(value)
+                    return 1
+
+                if event.key() == Qt.Key_Minus:
+                    value = max(self.control.volumeSlider.value()-5,0)
+                    self.control.volumeSlider.setValue(value)
+                    return 1
+
+            if event.key() == Qt.Key_Escape:
                 self.close()
                 return 1
 

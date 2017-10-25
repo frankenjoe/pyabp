@@ -256,6 +256,16 @@ class Player:
                 return self.volume(value)
 
 
+    def volumeUp(self):
+
+        self.volume(self.playlist.meta.volume + 5)
+
+
+    def volumeDown(self):
+
+        self.volume(self.playlist.meta.volume - 5)
+
+
     def status(self):
         
         if not self.client or not self.playlist:
