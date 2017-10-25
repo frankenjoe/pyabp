@@ -96,9 +96,7 @@ class App(QWidget):
 
         self.library = Library(playlists, font=font)
         self.library.view.doubleClicked.connect(self.libraryClicked)    
-        self.library.exportButton.clicked.connect(self.exportClicked)   
-        if os.path.exists(self.config.exportDir):
-            self.library.exportLineEdit.setText(self.config.exportDir)  
+        self.library.exportButton.clicked.connect(self.exportClicked)            
         self.library.setVisible(False)       
 
         # control

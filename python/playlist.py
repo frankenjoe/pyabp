@@ -28,9 +28,8 @@ class Playlist:
     def export(self, root, count = 1):
 
         for file in self.files:
-            src = os.path.join(self.rootDir, self.bookDir, file)
-            name, ext = os.path.splitext(src)
-            dst = os.path.join(root, 'pyabp' + str(count).zfill(4)) + ext
+            src = os.path.join(self.rootDir, self.bookDir, file)            
+            dst = os.path.join(root, 'pyabp' + str(count).zfill(4)) + '_' + file
             print('copy ' + src + ' > ' + dst)
             tools.copyfile(src, dst)
             count = count + 1
