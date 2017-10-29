@@ -29,9 +29,12 @@ class Player:
             
     def init(self):
 
-        try:            
+        try:                        
             self.client = MPDClient()
-            self.client.connect(self.host, self.port)  
+            self.client.connect(self.host, self.port)              
+                        
+            print(MPDClient.outputs())
+            
             return True
 
         except:
@@ -81,7 +84,7 @@ class Player:
             self.client.clear()        
 
             for file in playlist.files:
-                path = os.path.join(playlist.bookDir, file).replace('\\', '/') 
+                path = os.path.join(playlist.bookDir, file).replace('\\', '/')                 
                 self.client.add(path)
 
             self.volume(playlist.meta.volume)
@@ -145,8 +148,7 @@ class Player:
         if not self.client or not self.playlist:
             return     
 
-        if not self.isPlay:
-
+        if not self.isPlay:            
             self.playlist.meta.write()
 
         else:
@@ -240,13 +242,13 @@ class Player:
                     return self.restart()               
 
 
-    def volume(self, value):
+    def volume(self, value):    
         
         if not self.client or not self.playlist:
             return  
 
         value = max(0,min(100,value))
-        self.playlist.meta.volume = value
+        self.playlist.meta.volume = value            
 
         try:
             self.client.setvol(value)
@@ -270,6 +272,12 @@ class Player:
         
         if not self.client or not self.playlist:
             return (-1,0,0,0,'')  
+            
+        track = -1
+        length = 0
+        position = 0
+        duration = 0        
+        path = ''
 
         if not self.isPlay:
 
@@ -286,9 +294,9 @@ class Player:
                
         else:
 
-            try:    		    		
+            try:
    
-                status = self.client.status()	            
+                status = self.client.status()
                 track = int(status['song'])
                 path = self.playlist.files[track]
                 length = int(status['playlistlength'])

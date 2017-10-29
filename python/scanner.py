@@ -30,7 +30,7 @@ class Scanner:
         
         playlists = []
 
-        for root,dirs,files in os.walk(os.path.join(config.rootDir, config.subDir)):     
+        for root,dirs,files in os.walk(os.path.join(config.rootDir, config.subDir)):                 
 
             playlist = self.scanDir(root, config)        
             if playlist:

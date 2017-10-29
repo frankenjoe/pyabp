@@ -5,9 +5,9 @@ import shutil
 import glob
 
 from PyQt5.QtGui import (QIcon, QFont)
-from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt, QTime, QEvent)
+from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt, QTime, QEvent, QSize)
 from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QPushButton, QGridLayout, QGroupBox, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView, QMessageBox, qApp)
+from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QPushButton, QGridLayout, QGroupBox, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView, QMessageBox, qApp, QWIDGETSIZE_MAX, QLayout)
 
 import tools
 from player import Player
@@ -37,7 +37,7 @@ class App(QWidget):
     library = None
     control = None
     controlThread = None    
-    layout = None      
+    layout = None
 
 
     def __init__(self):
@@ -55,8 +55,9 @@ class App(QWidget):
         # mpd
 
         if self.config.startMpd:
-            self.server = Server()
-            self.server.start('..\\mpd\\mpd.exe', conf=os.path.realpath(self.config.confPath))
+            if not tools.islinux():
+                self.server = Server()
+                self.server.start('..\\mpd\\mpd.exe', conf=os.path.realpath(self.config.confPath))
 
         # player    
 
@@ -121,9 +122,9 @@ class App(QWidget):
         self.setLayout(self.layout)   
 
         # show
-
-        self.setFixedSize(self.layout.sizeHint())
-        self.setWindowState(Qt.WindowNoState)   
+        
+        self.setWindowState(Qt.WindowNoState)
+        self.layout.setSizeConstraint(QLayout.SetMinimumSize)          
         self.show()               
         if self.config.fullScreen:
             self.showFull()    
@@ -133,11 +134,12 @@ class App(QWidget):
         
         isVisible = self.library.isVisible()
         self.library.setVisible(not isVisible)
-        if isVisible:
-            self.setFixedSize(self.layout.sizeHint())
+        if isVisible:                       
             self.setWindowState(Qt.WindowNoState) 
-        else:
+            self.setFixedSize(self.layout.sizeHint())            
+        else:                        
             self.setWindowState(Qt.WindowFullScreen)             
+            self.layout.setSizeConstraint(QLayout.SetMaximumSize)
 
 
     def eventFilter(self, source, event):
@@ -203,8 +205,8 @@ class App(QWidget):
         
 
     def writeConfig(self):
-        
-        if self.player.playlist:
+                      
+        if self.player.playlist:            
             self.config.lastDir = self.player.playlist.bookDir
 
         self.config.isPlaying = self.player.isPlay
@@ -217,7 +219,7 @@ class App(QWidget):
         
         playlist.print()
         self.player.load(playlist)   
-        self.control.volumeSlider.setValue(playlist.meta.volume)
+        self.control.volumeSlider.setValue(playlist.meta.volume)        
         self.setWindowTitle(TITLE + ' [ ' + playlist.meta.artist + ' - ' + playlist.meta.album + ' ]') 
         if play:
             self.player.play()   

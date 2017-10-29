@@ -52,7 +52,7 @@ class Meta:
             data['ntracks'] = self.ntracks
             data['duration'] = self.duration
             data['track'] = self.track
-            data['position'] = self.position
+            data['position'] = self.position            
             data['volume'] = self.volume
             data['modified'] = self.modified
 
@@ -67,7 +67,7 @@ class Meta:
         print('position =', tools.friendlytime(self.position))
         print('total =', tools.friendlytime(self.duration))
         print('volume =', self.volume)
-        print('modified=', self.modified)
+        print('modified =', self.modified)
 
 
 if __name__ == '__main__':
