@@ -24,27 +24,30 @@ Python Audiobook Player
 
 * install [https://www.musicpd.org/](mpd)
 
-- sudo apt-get install mpd
+	* sudo apt-get install mpd
 
-- systemctl disable mpd
+	* systemctl disable mpd
 
-- mkdir ~/.config/mpd
+	* mkdir ~/.config/mpd
 
-- gunzip -c /usr/share/doc/mpd/mpdconf.example.gz > ~/.config/mpd/mpd.conf 
+	* gunzip -c /usr/share/doc/mpd/mpdconf.example.gz > ~/.config/mpd/mpd.conf 
 
-- gedit ~/.config/mpd/mpd.conf, uncomment the following entries and set to ~/.config/mpd/<entry>
+	* gedit ~/.config/mpd/mpd.conf, uncomment the following entries and set to ~/.config/mpd/<entry>
 
+```
 music_directory
 playlist_directory
 db_file
 log_file
 pid_file
 state_file 
+```
 
-- uncomment the desired output (e.g. ALSA output)
+	* uncomment the desired output (e.g. ALSA output)
 
-- create '~/.config/autostart/mpd.desktop'
+	* create '~/.config/autostart/mpd.desktop'
 
+```
 [Desktop Entry]
 Encoding=UTF-8
 Type=Application
@@ -55,8 +58,9 @@ StartupNotify=true
 Terminal=false
 Hidden=false
 X-GNOME-Autostart-enabled=true
+```
 
-- mpd (or restart system)
+	* mpd (or restart system)
 
 * ./pyabp.sh
 
