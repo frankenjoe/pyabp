@@ -4,10 +4,9 @@ import warnings
 import shutil
 import glob
 
-from PyQt5.QtGui import (QIcon, QFont)
+from PyQt5.QtGui import (QIcon, QFont,  QStandardItemModel)
 from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt, QTime, QEvent, QSize)
-from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QPushButton, QGridLayout, QGroupBox, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView, QMessageBox, qApp, QWIDGETSIZE_MAX, QLayout)
+from PyQt5.QtWidgets import (qApp, QApplication, QCheckBox, QComboBox, QPushButton, QGridLayout, QGroupBox, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView, QMessageBox, QLayout)
 
 import tools
 from player import Player
@@ -96,8 +95,7 @@ class App(QWidget):
         # library
 
         self.library = Library(playlists, font=font)
-        self.library.view.doubleClicked.connect(self.libraryClicked)    
-        self.library.exportButton.clicked.connect(self.exportClicked)            
+        self.library.view.doubleClicked.connect(self.libraryClicked)             
         self.library.setVisible(False)       
 
         # control
@@ -242,34 +240,6 @@ class App(QWidget):
         self.player.move(value)
 
 
-    def exportClicked(self):
-
-        root = self.config.exportDir
-        if os.path.exists(root):
-            playlist = self.library.getPlaylist()
-            if playlist:            
-                print('-'*30)
-                files = glob.glob(os.path.join(root, 'pyabp*'))
-                count = 1
-                if len(files) > 0:
-                    reply = self.askUser('Delete existing playlist (otherwise files are appended)?')
-                    if not reply:
-                        count = len(files) + 1
-                    else:                    
-                        for file in files:
-                            print('delete ' + file)
-                            os.remove(file) 
-
-                playlist.export(root, count)
-
-
-    def askUser(self, text):
-
-        reply = QMessageBox.question(self, 'Question', text, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.No:
-            return False
-        else:
-            return True
 
  
 if __name__ == '__main__':
@@ -277,5 +247,3 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
     sys.exit(app.exec_())
-
-    tools.procstop(pid)

@@ -9,6 +9,7 @@ import platform
 import datetime
 import shutil
 import psutil
+import glob
 
 
 INVALID = -1
@@ -65,6 +66,17 @@ def getroot(confPath):
     root = os.path.expanduser(readconf(confpath, 'music_directory'))    
     
     return root
+
+
+def getfiles(root, extensions=['*']):
+
+    files = []
+
+    if os.path.exists(root):
+        for ext in extensions:
+            files.extend(glob.glob(os.path.join(root, '*.' + ext)))
+
+    return files
 
 
 def procname(pid):

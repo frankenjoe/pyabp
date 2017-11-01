@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{6e01497f-31bf-4f2d-85ee-fc8a243065df}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>gui_main.py</StartupFile>
+    <StartupFile>gui_export.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -27,7 +27,9 @@
     <Compile Include="gui_control_thread.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="gui_export.py" />
     <Compile Include="gui_library.py" />
+    <Compile Include="gui_log.py" />
     <Compile Include="gui_main.py" />
     <Compile Include="meta.py" />
     <Compile Include="player.py" />

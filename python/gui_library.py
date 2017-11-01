@@ -40,8 +40,7 @@ class Library(QGroupBox):
     model = None
     filter = None
     searchIcon = None
-    searchLineEdit = None
-    exportButton = None    
+    searchLineEdit = None   
 
  
     def __init__(self, playlists, font=QFont()):
@@ -68,8 +67,8 @@ class Library(QGroupBox):
             model.setData(model.index(0, DURATION), tools.friendlytime(playlist.meta.duration)) 
 
         filterModel = SortFilterProxyModel()
-        filterModel.setSourceModel(model)           
-
+        filterModel.setSourceModel(model)     
+       
         view = QTreeView()        
         view.setFont(font)
         view.setRootIsDecorated(False)
@@ -80,7 +79,10 @@ class Library(QGroupBox):
         for i in range(model.columnCount()-1,0,-1):
             view.sortByColumn(i, Qt.AscendingOrder)     
             view.resizeColumnToContents(i)
-        view.hideColumn(0)      
+        view.hideColumn(0)    
+
+        layout_main = QHBoxLayout()  
+        layout_main.addWidget(view)
 
         # filter
 
@@ -90,14 +92,6 @@ class Library(QGroupBox):
         self.searchLineEdit = self.addEdit(font, layout_top)               
         self.searchLineEdit.textChanged.connect(filterModel.setFilterFixedString)
         self.searchLineEdit.setToolTip('Type author or album name to filter library')
-
-        # export
-
-        layout_main = QHBoxLayout()
-
-        layout_main.addWidget(view)
-        self.exportButton = self.addButton('../pics/save.png', layout_main, setHeight=False, setWidth=True) 
-        self.exportButton.setToolTip('Export selected playlist (set export folder in <pyabp.init>)')
 
         # layout
 

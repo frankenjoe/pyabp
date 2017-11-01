@@ -19,6 +19,7 @@ class Config:
     scanAll = False
     scanNew = True
     scanModified = True
+    scanExtensions = 'mp3;ogg;wav;flac'
 
 
     def read(self, path):
@@ -42,7 +43,8 @@ class Config:
 
                 self.scanAll = False if int(config['SCAN']['scanAll']) <= 0 else True 
                 self.scanNew = False if int(config['SCAN']['scanNew']) <= 0 else True 
-                self.scanModified = False if int(config['SCAN']['scanModified']) <= 0 else True                
+                self.scanModified = False if int(config['SCAN']['scanModified']) <= 0 else True     
+                self.scanExtensions = config['SCAN']['scanExtensions'].split(';')        
 
             except:
                 print('could not read config file "' + path + '"')
@@ -68,6 +70,7 @@ class Config:
             'scanAll' : 1 if self.scanAll else 0, 
             'scanNew' : 1 if self.scanNew else 0,
             'scanModified' : 1 if self.scanModified else 0,
+            'scanExtensions' : ';'.join(self.scanExtensions)
         }
         with open(path, 'w') as fp:
             config.write(fp)
@@ -87,6 +90,7 @@ class Config:
         print('scanAll =', self.scanAll)
         print('scanNew =', self.scanNew)
         print('scanModified =', self.scanModified)
+        print('scanExtensions =', ';'.join(self.scanExtensions))
 
 
 if __name__ == '__main__':

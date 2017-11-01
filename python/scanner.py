@@ -11,9 +11,6 @@ from meta import Meta
 from config import Config
 
 
-EXTENSIONS = ['mp3', 'ogg']
-
-
 class Scanner:
 
 
@@ -43,9 +40,7 @@ class Scanner:
                 
         if os.path.isdir(root):
             
-            files = []
-            for ext in EXTENSIONS:
-                files.extend(glob.glob(os.path.join(root, '*.' + ext)))
+            files = tools.getfiles(root, config.scanExtensions)
 
             if files:
 
@@ -101,7 +96,7 @@ class Scanner:
                     duration = duration + tag.duration
             meta.duration = duration
         except:
-            warnings.warn('could not read mp3 tag: ' + path)
+            warnings.warn('could not read tag: ' + path)
             
         return meta
         

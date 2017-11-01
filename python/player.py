@@ -31,16 +31,13 @@ class Player:
 
         try:                        
             self.client = MPDClient()
-            self.client.connect(self.host, self.port)              
-                        
-            print(MPDClient.outputs())
-            
-            return True
+            self.client.connect(self.host, self.port)    
 
         except:
             warnings.warn('could not connect mpd')
-
-        return False
+            return False
+        
+        return True
 
 
     def close(self):

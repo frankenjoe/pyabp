@@ -25,14 +25,22 @@ class Playlist:
                     fp.write(path + '\n')
 
 
-    def export(self, root, count = 1):
+    def export(self, root, count = 0, log = None):
+
+        if count == 0:
+            count = len(self.files)
 
         for file in self.files:
             src = os.path.join(self.rootDir, self.bookDir, file)            
-            dst = os.path.join(root, 'pyabp' + str(count).zfill(4)) + '_' + file
+            dst = os.path.join(root, file)
+            if log:
+                log.print('copy ' + src + ' > ' + dst)          
             print('copy ' + src + ' > ' + dst)
             tools.copyfile(src, dst)
-            count = count + 1
+            count = count - 1
+
+            if count == 0:
+                break
 
 
     def print(self):
