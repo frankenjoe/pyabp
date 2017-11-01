@@ -19,7 +19,7 @@ class Config:
     scanAll = False
     scanNew = True
     scanModified = True
-    scanExtensions = 'mp3;ogg;wav;flac'
+    scanExtensions = ['mp3','ogg','wav','flac']
 
 
     def read(self, path):
