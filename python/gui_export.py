@@ -36,6 +36,7 @@ class PageSelectAudiobook(QWizardPage):
         super().__init__()  
 
         self.setTitle('Select Audiobook')
+        self.setSubTitle('Select the audiobook you want to copy (use the search field to filter the results)')
         self.setFont(font)
         self.config = config
 
@@ -45,7 +46,7 @@ class PageSelectAudiobook(QWizardPage):
         self.library = Library(playlists, font=font)
         self.library.view.clicked.connect(self.libraryClicked) 
 
-        layout = QHBoxLayout()        
+        layout = QVBoxLayout()        
         layout.addWidget(self.library)
         self.setLayout(layout)
 
@@ -78,6 +79,7 @@ class PageSelectDrive(QWizardPage):
         super().__init__()  
         
         self.setTitle('Select Drive')      
+        self.setSubTitle('Select the drive to which the audiobook should be copied (existing audio files will be deleted)')
         self.setFont(font)  
         self.config = config
 
@@ -106,7 +108,10 @@ class PageSelectDrive(QWizardPage):
     
         if os.path.exists(root):
             self.files = tools.getfiles(root, self.config.scanExtensions)
-            self.label.setText ('<font color="red">WARNING: ' + str(len(self.files)) + ' will be deleted</font>')   
+            if len(self.files) > 0:
+                self.label.setText ('<font color="red">WARNING: ' + str(len(self.files)) + ' files will be deleted</font>')   
+            else:
+                self.label.setText ('No files will be deleted')   
 
 
     def initializePage(self):
@@ -151,10 +156,18 @@ class PageSelectDrive(QWizardPage):
     def disks(self, removeableonly=False):
         
         partitions = []
+        
+        if self.config.exportDir and os.path.exists(self.config.exportDir):
+            partitions.append(self.config.exportDir)
+
         for partition in psutil.disk_partitions():     
-            tokens = partition.opts.split(',')
-            if not removeableonly or tokens[1] == 'removable':
-                partitions.append(partition.mountpoint)
+            tokens = partition.opts.split(',')            
+            if tools.islinux():
+                if not removeableonly or 'flush' in tokens:
+                    partitions.append(partition.mountpoint)
+            else:
+                if not removeableonly or 'removable' in tokens:
+                    partitions.append(partition.mountpoint)
 
         return partitions
 
@@ -166,7 +179,8 @@ class PageCopy(QWizardPage):
 
         super().__init__()  
 
-        self.setTitle("Copy first file only" if firstOnly else "Copy files")
+        self.setTitle('Copy file(s)')
+        self.setSubTitle('Click "Next" to copy the first file of the audiobook.' if firstOnly else 'Click "Next" to copy all files of the audiobook.')
         self.setFont(font)
         self.firstOnly = firstOnly
         self.config = config
@@ -222,7 +236,8 @@ class PageFinal(QWizardPage):
 
         super().__init__()  
 
-        self.setTitle("Finished")
+        self.setTitle('Finished')
+        self.setSubTitle('The audiobook was successfully copied to the drive. Enjoy listening.')
         self.setFont(font)
 
 
@@ -247,11 +262,12 @@ class Export(QWizard):
 
         self.parent = parent
         self.setWindowTitle("Export Playlist")
-        self.setFont(font)
+        #self.setFont(font)
 
         self.addPage(PageSelectAudiobook(self.config, font))
         self.addPage(PageSelectDrive(self.config, font))
-        self.addPage(PageCopy(self.config, font, firstOnly = True))
+        if self.config.exportSpecial:
+            self.addPage(PageCopy(self.config, font, firstOnly = True))        
         self.addPage(PageCopy(self.config, font))
         self.addPage(PageFinal(self.config, font))
 

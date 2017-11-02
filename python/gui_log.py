@@ -10,16 +10,18 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QPlainTextEdit, QHBoxLayout,
 class Log(QWidget):
 
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
 
         super().__init__()  
 
+        if parent:
+            self.setParent(parent)
+            
         self.console = QPlainTextEdit()
         self.console.setReadOnly(True)
 
         layout = QVBoxLayout()
         layout.addWidget(self.console)       
-
         self.setLayout(layout)
 
         
@@ -27,4 +29,4 @@ class Log(QWidget):
     
         self.console.appendPlainText(text)
         self.console.verticalScrollBar().setValue(self.console.verticalScrollBar().maximum());
-        self.repaint()
+        self.console.repaint()        
