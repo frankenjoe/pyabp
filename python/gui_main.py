@@ -49,14 +49,19 @@ class App(QWidget):
 
         # config
 
-        self.readConfig()
-        
+        self.readConfig()              
+
+        # playlists
+
+        self.scanner = Scanner()
+        playlists = self.scanner.scan(self.config) 
+      
         # mpd
 
         if self.config.startMpd:
             if not tools.islinux():
                 self.server = Server()
-                self.server.start('..\\mpd\\mpd.exe', conf=os.path.realpath(self.config.confPath))
+                self.server.start('..\\mpd\\mpd.exe', conf=os.path.realpath(self.config.confPath)) 
 
         # player    
 
@@ -64,16 +69,11 @@ class App(QWidget):
         self.player.connect()
         self.player.update()
 
-        # playlists
-
-        self.scanner = Scanner()
-        playlists = self.scanner.scan(self.config)
-
         # init
 
-        self.initUI(playlists)     
+        self.initUI(playlists)    
 
-        # play
+        # load playlist
 
         if os.path.exists(os.path.join(self.config.rootDir, self.config.lastDir)):
             for playlist in playlists:
@@ -227,7 +227,7 @@ class App(QWidget):
 
         playlist = self.library.getPlaylist() 
         if playlist:               
-            self.loadPlaylist(playlist, self.player.isPlay)
+            self.loadPlaylist(playlist, True)
 
 
     def volumeChanged(self, value):
