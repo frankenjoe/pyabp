@@ -66,8 +66,10 @@ class App(QWidget):
         # player    
 
         self.player = Player()
-        self.player.connect()
-        self.player.update()
+        if self.player.connect():
+            self.player.update()
+        else:
+            warnings.warn('could not connect player')            
 
         # init
 

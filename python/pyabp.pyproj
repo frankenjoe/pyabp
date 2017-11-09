@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{6e01497f-31bf-4f2d-85ee-fc8a243065df}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>gui_export.py</StartupFile>
+    <StartupFile>gui_main.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -32,6 +32,7 @@
     <Compile Include="gui_log.py" />
     <Compile Include="gui_main.py" />
     <Compile Include="meta.py" />
+    <Compile Include="PersistentMPDClient.py" />
     <Compile Include="player.py" />
     <Compile Include="playlist.py" />
     <Compile Include="scanner.py" />

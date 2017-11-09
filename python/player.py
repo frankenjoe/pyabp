@@ -2,7 +2,7 @@ import os
 import time
 import warnings
 
-from mpd import MPDClient
+from PersistentMPDClient import PersistentMPDClient
 from tinytag import TinyTag
 
 import tools
@@ -29,15 +29,15 @@ class Player:
             
     def init(self):
 
-        try:                        
-            self.client = MPDClient()
-            self.client.connect(self.host, self.port)    
+        try:                      
 
-        except:
-            warnings.warn('could not connect mpd')
-            return False
-        
-        return True
+            self.client = PersistentMPDClient(host=self.host, port=self.port)
+            return True 
+
+        except Exception as ex:
+            warnings.warn(ex)
+            
+        return False        
 
 
     def close(self):
@@ -51,8 +51,6 @@ class Player:
             self.client.close()
         except Exception as ex:
             print(ex)            
-            if self.init():
-                self.close()
 
 
     def update(self):
@@ -64,8 +62,6 @@ class Player:
             self.client.rescan()
         except Exception as ex:
             print(ex)
-            if self.init():
-                self.update()
 
 
     def load(self, playlist):
@@ -88,8 +84,6 @@ class Player:
 
         except Exception as ex:
             print(ex)
-            if self.init():
-                self.load(playlist)
 
 
     def toggle(self):
@@ -117,8 +111,6 @@ class Player:
 
         except Exception as ex:
             print(ex)
-            if self.init():
-                return self.play()
 
 
     def move(self, position):
@@ -135,9 +127,7 @@ class Player:
             try:
                 self.client.seekcur(position)
             except Exception as ex:
-                print(ex)
-                if self.init():
-                    return self.move(position)   
+                print(ex) 
 
 
     def stop(self):     
@@ -170,8 +160,6 @@ class Player:
 
             except Exception as ex:
                 print(ex)
-                if self.init():
-                    return self.stop()
 
 
     def next(self):
@@ -193,8 +181,6 @@ class Player:
                     self.client.next()
             except Exception as ex:
                 print(ex)
-                if self.init():
-                    return self.next()
 
 
     def previous(self):
@@ -216,8 +202,6 @@ class Player:
                     self.client.previous()
             except Exception as ex:
                 print(ex)
-                if self.init():
-                    return self.previous()
 
 
     def restart(self):
@@ -234,9 +218,7 @@ class Player:
             try:
                 self.client.seek(0,0.0)
             except Exception as ex:
-                print(ex)
-                if self.init():
-                    return self.restart()               
+                print(ex)             
 
 
     def volume(self, value):    
@@ -251,8 +233,6 @@ class Player:
             self.client.setvol(value)
         except Exception as ex:
             print(ex)
-            if self.init():
-                return self.volume(value)
 
 
     def volumeUp(self):
@@ -292,8 +272,16 @@ class Player:
         else:
 
             try:
-   
+                   
                 status = self.client.status()
+
+                state = status['state']
+                if state == 'stop':
+                    self.isPlay = False
+                    self.restart()
+                    self.play()
+                    return self.status()
+
                 track = int(status['song'])
                 path = self.playlist.files[track]
                 length = int(status['playlistlength'])
@@ -301,9 +289,7 @@ class Player:
                 duration = float(status['duration'])
 
             except Exception as ex:
-                print(ex)
-                if self.init():
-                    return self.status()        
+                print(ex)    
 
         return (track,length,position,duration,path)
 
