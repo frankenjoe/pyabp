@@ -51,7 +51,7 @@ class App(QWidget):
 
         self.readConfig()              
 
-        # playlists
+        # scan
 
         self.scanner = Scanner()
         playlists = self.scanner.scan(self.config) 
