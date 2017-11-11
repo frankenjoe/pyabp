@@ -12,6 +12,8 @@ Python Audiobook Player
 
 * pip3 install psutil
 
+* pip3 install tinydb
+
 # Windows
 
 * copy https://www.musicpd.org/download/win32/0.20.10/mpd.exe to .\mpd
@@ -64,4 +66,7 @@ Python Audiobook Player
 
 * ./pyabp.sh
 
+# Credits
 
+Icon by Martz90
+http://www.iconarchive.com/show/circle-icons-by-martz90/books-icon.html

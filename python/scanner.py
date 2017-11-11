@@ -1,6 +1,7 @@
 import glob
 import os
 import warnings
+import logging
 from enum import Enum
 
 from tinytag import TinyTag
@@ -9,9 +10,22 @@ import tools
 from playlist import Playlist
 from meta import Meta
 from config import Config
+from database import Database
 
 
 class Scanner:
+
+
+    logger = None
+    database = None
+    config = None
+
+
+    def __init__(self, config: Config, database : Database, logger=None):
+
+        self.config = config
+        self.database = database
+        self.logger = logger
 
 
     def clean(self, path: str, root: str) -> str:
@@ -23,48 +37,52 @@ class Scanner:
         return path
 
 
-    def scan(self, config: Config) -> list:
-        
+    def scan(self) -> list:
+
         playlists = []
+        
+        if not self.database or not self.config:
+            return playlists
 
-        for root,dirs,files in os.walk(os.path.join(config.rootDir, config.subDir)):                 
+        self.database.clean()
 
-            playlist = self.scanDir(root, config)        
+        for root,dirs,files in os.walk(os.path.join(self.config.rootDir, self.config.subDir)):                 
+
+            playlist = self.scanDir(root)        
             if playlist:
                 playlists.append(playlist) 
 
         return playlists
 
 
-    def scanDir(self, root: str, config: Config) -> Playlist:     
+    def scanDir(self, root: str) -> Playlist:     
                 
         if os.path.isdir(root):
             
-            files = tools.getfiles(root, config.scanExtensions)
+            files = tools.getfiles(root, self.config.scanExtensions)
 
             if files:
 
                 files.sort()
 
                 playlist = Playlist()
-                playlist.rootDir = config.rootDir 
-                playlist.bookDir = self.clean(root, config.rootDir)
+                playlist.rootDir = self.config.rootDir 
+                playlist.bookDir = self.clean(root, self.config.rootDir)
                 playlist.files = [os.path.basename(file) for file in files]
 
-                metapath = os.path.join(root, 'meta.json')
                 time = os.path.getmtime(root)    
-
                 meta = None           
-                if os.path.exists(metapath):
-                    meta = Meta()
-                    meta.read(metapath)       
 
-                if config.scanAll or \
-                    (config.scanNew and not meta) or \
-                    (config.scanModified and meta and time - meta.modified > 60):
+                if self.database.contains(root):    
+                    meta = self.database.read(root)
 
-                    meta = self.scanHelp(root, time, files, config) 
-                    meta.write(metapath) 
+                if self.config.scanAll or \
+                    (self.config.scanNew and not meta) or \
+                    (self.config.scanModified and meta and time != meta.modified):
+
+                    meta = self.scanHelp(root, time, files) 
+
+                    self.database.write(meta)
                 
                 if meta:
                     playlist.meta = meta
@@ -73,11 +91,12 @@ class Scanner:
         return None        
 
 
-    def scanHelp(self, root: str, time: float, files: list, config: Config) -> Meta: 
+    def scanHelp(self, root: str, time: float, files: list) -> Meta: 
 
-        print('scan ' + root) 
+        tools.info('scan ' + root, self.logger) 
 
-        meta = Meta()        
+        meta = Meta()       
+        meta.root = root 
         meta.modified = time
         path = os.path.join(root, files[0])         
 
@@ -96,7 +115,7 @@ class Scanner:
                     duration = duration + tag.duration
             meta.duration = duration
         except:
-            warnings.warn('could not read tag: ' + path)
+            tools.error('could not read tag: ' + path, self.logger)
             
         return meta
         
@@ -106,7 +125,12 @@ if __name__ == '__main__':
     config = Config()
     config.read('../pyabp.init')
 
-    scanner = Scanner()
-    playlists = scanner.scan(config)
+    database = Database()
+    database.open('../pyabp.json')
+
+    scanner = Scanner(config, database)
+    playlists = scanner.scan()
     for playlist in playlists:
         playlist.print()
+
+    database.close()

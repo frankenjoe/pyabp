@@ -3,6 +3,7 @@ import os
 import warnings
 import shutil
 import glob
+import logging
 
 from PyQt5.QtGui import (QIcon, QFont,  QStandardItemModel)
 from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt, QTime, QEvent, QSize)
@@ -14,13 +15,17 @@ from playlist import Playlist
 from scanner import Scanner
 from config import Config
 from server import Server
+from database import Database
 
 from gui_library import Library
 from gui_control import Control
 from gui_control_thread import ControlThread
  
 
+LOGFILE = '../pyabp.log'
 CONFFILE = '../pyabp.init'
+DBFILE = '../pyabp.json'
+MPDFILE = '..\\mpd\\mpd.exe'
 TITLE = 'Python Audiobook Player'
 ICONFILE = '../pics/player.ico'
 
@@ -28,7 +33,9 @@ ICONFILE = '../pics/player.ico'
 class App(QWidget):
  
 
+    logger = None
     config = None
+    database = None
     font = None
     scanner = None
     server = None
@@ -43,33 +50,47 @@ class App(QWidget):
 
         super().__init__()    
 
+        # logger
+
+        self.logger = logging.getLogger('pyabp')
+        logFileHandler = logging.FileHandler(LOGFILE)
+        logFormatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        logFileHandler.setFormatter(logFormatter)
+        self.logger.addHandler(logFileHandler) 
+        self.logger.setLevel(logging.DEBUG)
+
         # event filter
 
         qApp.installEventFilter(self) 
 
         # config
 
-        self.readConfig()              
+        self.readConfig()        
+
+        # database
+
+        self.database = Database(logger=self.logger)
+        self.database.open(DBFILE)
 
         # scan
 
-        self.scanner = Scanner()
-        playlists = self.scanner.scan(self.config) 
+        self.scanner = Scanner(self.config, self.database, logger=self.logger)
+        playlists = self.scanner.scan() 
       
         # mpd
 
         if self.config.startMpd:
             if not tools.islinux():
-                self.server = Server()
-                self.server.start('..\\mpd\\mpd.exe', conf=os.path.realpath(self.config.confPath)) 
+                self.server = Server(logger=self.logger)
+                self.server.start(MPDFILE, conf=os.path.realpath(self.config.confPath)) 
 
         # player    
 
-        self.player = Player()
+        self.player = Player(self.database, logger=self.logger)
         if self.player.connect():
             self.player.update()
         else:
-            warnings.warn('could not connect player')            
+            tools.error('could not connect player', self.logger)            
 
         # init
 
@@ -124,6 +145,14 @@ class App(QWidget):
         # show
         
         self.setWindowState(Qt.WindowNoState)
+        self.setWindowFlags(
+            Qt.Window |
+            Qt.CustomizeWindowHint |
+            Qt.WindowTitleHint |
+            Qt.WindowCloseButtonHint |
+            Qt.WindowMinimizeButtonHint |
+            Qt.WindowStaysOnTopHint
+        )
         self.layout.setSizeConstraint(QLayout.SetMinimumSize)          
         self.show()               
         if self.config.fullScreen:
@@ -188,20 +217,22 @@ class App(QWidget):
         self.player.close()
         if self.server:
             self.server.stop()
+        if self.database:
+            self.database.close()
 
         event.accept()         
 
 
     def readConfig(self):
         
-        self.config = Config()
+        self.config = Config(logger=self.logger)
 
         if os.path.exists(CONFFILE):            
             self.config.read(CONFFILE)   
 
-        print('-'*30)
-        self.config.print()       
-        print('-'*30)
+        tools.info('-'*30, self.logger)
+        self.config.print(logger=self.logger)       
+        tools.info('-'*30, self.logger)
         
 
     def writeConfig(self):
@@ -217,7 +248,7 @@ class App(QWidget):
 
     def loadPlaylist(self, playlist, play):
         
-        playlist.print()
+        playlist.print(logger=self.logger)
         self.player.load(playlist)   
         self.control.volumeSlider.setValue(playlist.meta.volume)        
         self.setWindowTitle(TITLE + ' [ ' + playlist.meta.artist + ' - ' + playlist.meta.album + ' ]') 

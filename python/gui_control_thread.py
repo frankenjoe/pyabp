@@ -6,8 +6,6 @@ class ControlThread:
 
     def __init__(self, player, control):
 
-        print('start control thread')
-
         if player:
                     
             thread = Thread(target=self.run, args=(player,control), daemon=True)

@@ -7,11 +7,16 @@ from tinytag import TinyTag
 
 import tools
 from scanner import Scanner
+from config import Config
+from database import Database
+from server import Server
 
 
 class Player:
 
 
+    logger = None
+    database = None
     host = '127.0.0.1'
     port = 6600
     playlist = None
@@ -19,15 +24,15 @@ class Player:
     isPlay = False
 
 
-    def connect(self, host='127.0.0.1', port=6600):
+    def __init__(self, database : Database, host='127.0.0.1', port=6600, logger=None):
 
+        self.logger = logger
+        self.database = database
         self.host = host
         self.port = port
 
-        return self.init()
-           
-            
-    def init(self):
+
+    def connect(self):
 
         try:                      
 
@@ -35,7 +40,7 @@ class Player:
             return True 
 
         except Exception as ex:
-            warnings.warn(ex)
+            tools.error(ex,self.logger)
             
         return False        
 
@@ -50,7 +55,7 @@ class Player:
         try:        
             self.client.close()
         except Exception as ex:
-            print(ex)            
+            tools.error(ex,self.logger)         
 
 
     def update(self):
@@ -61,7 +66,7 @@ class Player:
         try:
             self.client.rescan()
         except Exception as ex:
-            print(ex)
+            tools.error(ex,self.logger)
 
 
     def load(self, playlist):
@@ -83,7 +88,7 @@ class Player:
             self.volume(playlist.meta.volume)
 
         except Exception as ex:
-            print(ex)
+            tools.error(ex,self.logger)
 
 
     def toggle(self):
@@ -103,14 +108,14 @@ class Player:
 
             track = min(self.playlist.meta.track, self.playlist.meta.ntracks)            
             position = self.playlist.meta.position 
-            print('play ' + str(track) + '>' + str(position))
+            tools.info('play ' + str(track) + '>' + str(position), self.logger)
 
             self.client.play()
             self.client.seek(track, position)
             self.isPlay = True
 
         except Exception as ex:
-            print(ex)
+            tools.error(ex,self.logger)
 
 
     def move(self, position):
@@ -127,7 +132,7 @@ class Player:
             try:
                 self.client.seekcur(position)
             except Exception as ex:
-                print(ex) 
+                tools.error(ex,self.logger) 
 
 
     def stop(self):     
@@ -136,7 +141,9 @@ class Player:
             return     
 
         if not self.isPlay:            
-            self.playlist.meta.write()
+            
+            if self.database:
+                self.database.write(self.playlist.meta)
 
         else:
 
@@ -151,15 +158,16 @@ class Player:
                 position = status['elapsed']
                 volume = status['volume']            
             
-                print('stop ' + str(track) + '>' + str(position))
+                tools.info('stop ' + str(track) + '>' + str(position), self.logger)
 
                 self.playlist.meta.position = float(position)
                 self.playlist.meta.track = int(track)
                 self.playlist.meta.volume = int(volume)
-                self.playlist.meta.write()
+                if self.database:
+                    self.database.write(self.playlist.meta)
 
             except Exception as ex:
-                print(ex)
+                tools.error(ex,self.logger)
 
 
     def next(self):
@@ -180,7 +188,7 @@ class Player:
                 if track < length - 1:
                     self.client.next()
             except Exception as ex:
-                print(ex)
+                tools.error(ex,self.logger)
 
 
     def previous(self):
@@ -201,7 +209,7 @@ class Player:
                 if track > 0:                
                     self.client.previous()
             except Exception as ex:
-                print(ex)
+                tools.error(ex,self.logger)
 
 
     def restart(self):
@@ -218,7 +226,7 @@ class Player:
             try:
                 self.client.seek(0,0.0)
             except Exception as ex:
-                print(ex)             
+                tools.error(ex,self.logger)             
 
 
     def volume(self, value):    
@@ -232,7 +240,7 @@ class Player:
         try:
             self.client.setvol(value)
         except Exception as ex:
-            print(ex)
+            tools.error(ex,self.logger)
 
 
     def volumeUp(self):
@@ -261,7 +269,7 @@ class Player:
             track = self.playlist.meta.track
             path = os.path.join(self.playlist.rootDir, self.playlist.bookDir, self.playlist.files[track])
             length = len(self.playlist.files)
-            position = self.playlist.meta.position           
+            position = self.playlist.meta.position          
                
             try:
                 tag = TinyTag.get(path)
@@ -289,25 +297,32 @@ class Player:
                 duration = float(status['duration'])
 
             except Exception as ex:
-                print(ex)    
+                tools.error(ex,self.logger)    
 
         return (track,length,position,duration,path)
 
 
 if __name__ == '__main__':
     
-    root = tools.getroot('..\\mpd\\mpd.conf')
-    sub = 'Audiobooks'
+    config = Config()
+    config.read('../pyabp.init')
 
-    scanner = Scanner()
-    playlists = scanner.scan(root, sub)
+    if not tools.islinux():
+        server = Server()
+        server.start('..\\mpd\\mpd.exe', conf=os.path.realpath(config.confPath)) 
+
+    database = Database()
+    database.open('../pyabp.json')
+
+    scanner = Scanner(config, database)
+    playlists = scanner.scan()
 
     if len(playlists) > 0:
         
         playlist = playlists[0]
         playlist.print()
     
-        player = Player()
+        player = Player(None)
 
         if player.connect():
             player.load(playlist)    

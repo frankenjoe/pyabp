@@ -1,4 +1,5 @@
 import os
+import logging
 
 import tools
 from configparser import ConfigParser
@@ -7,6 +8,7 @@ from configparser import ConfigParser
 class Config:
     
 
+    logger = None
     startMpd = True
     confPath = ''  
     rootDir = ''  
@@ -23,7 +25,12 @@ class Config:
     scanExtensions = ['mp3','ogg','wav','flac']
 
 
-    def read(self, path):
+    def __init__(self, logger=None):
+
+        self.logger = logger
+
+
+    def read(self, path, logger=None):
 
         config = ConfigParser()
         if os.path.exists(path):
@@ -49,7 +56,7 @@ class Config:
                 self.scanExtensions = config['SCAN']['scanExtensions'].split(';')        
 
             except:
-                print('could not read config file "' + path + '"')
+                tools.error('could not read config file "' + path + '"', logger)
 
     def write(self, path):
 
@@ -79,22 +86,22 @@ class Config:
             config.write(fp)
                           
 
-    def print(self):        
+    def print(self, logger=None):        
 
-        print('startMpd =', self.startMpd)
-        print('confPath =', self.confPath)
-        print('rootDir =', self.rootDir)      
-        print('subDir =', self.subDir)
-        print('lastDir =', self.lastDir)
-        print('exportDir =', self.exportDir)
-        print('exportSpecial =', self.exportSpecial)
-        print('isPlaying =', self.isPlaying)
-        print('fullScreen =', self.fullScreen)
-        print('fontSize =', self.fontSize)
-        print('scanAll =', self.scanAll)
-        print('scanNew =', self.scanNew)
-        print('scanModified =', self.scanModified)
-        print('scanExtensions =', ';'.join(self.scanExtensions))
+        tools.info('startMpd=' + str(self.startMpd), logger)
+        tools.info('confPath=' + self.confPath, logger)
+        tools.info('rootDir=' + self.rootDir, logger)      
+        tools.info('subDir=' + self.subDir, logger)
+        tools.info('lastDir=' + self.lastDir, logger)
+        tools.info('exportDir=' + self.exportDir, logger)
+        tools.info('exportSpecial=' + str(self.exportSpecial), logger)
+        tools.info('isPlaying=' + str(self.isPlaying), logger)
+        tools.info('fullScreen=' + str(self.fullScreen), logger)
+        tools.info('fontSize=' + str(self.fontSize), logger)
+        tools.info('scanAll=' + str(self.scanAll), logger)
+        tools.info('scanNew=' + str(self.scanNew), logger)
+        tools.info('scanModified=' + str(self.scanModified), logger)
+        tools.info('scanExtensions=' + ';'.join(self.scanExtensions), logger)
 
 
 if __name__ == '__main__':
@@ -119,5 +126,5 @@ if __name__ == '__main__':
 
     config2 = Config()
     config2.read(path)
-    config2.print()
+    config2.tools.info()
 

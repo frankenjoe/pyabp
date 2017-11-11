@@ -2,6 +2,8 @@ import glob
 import os
 from tinytag import TinyTag
 import warnings
+import logging
+
 import tools
 from meta import Meta
 
@@ -25,7 +27,7 @@ class Playlist:
                     fp.write(path + '\n')
 
 
-    def export(self, root, count = 0, log = None):
+    def export(self, root, count = 0, log=None, logger=None):
 
         if count == 0:
             count = len(self.files)
@@ -33,9 +35,11 @@ class Playlist:
         for file in self.files:
             src = os.path.join(self.rootDir, self.bookDir, file)            
             dst = os.path.join(root, file)
+        
             if log:
-                log.print('copy ' + src + ' > ' + dst)          
-            print('copy ' + src + ' > ' + dst)
+                log.print('copy ' + src + ' > ' + dst)
+            tools.info('copy ' + src + ' > ' + dst, logger)
+
             tools.copyfile(src, dst)
             count = count - 1
 
@@ -43,18 +47,18 @@ class Playlist:
                 break
 
 
-    def print(self):
+    def print(self, logger=None):
 
-        print('-'*30)
-        print(self.bookDir)
-        print('-'*30)                
+        tools.info('-'*30, logger)
+        tools.info(self.bookDir, logger)
+        tools.info('-'*30, logger)                
         if self.meta:
-            self.meta.print()     
-        print('-'*30)              
-        print(self.files[0])
-        print('...')
-        print(self.files[-1])
-        print('-'*30)        
+            self.meta.print(logger)     
+        tools.info('-'*30, logger)              
+        tools.info(self.files[0], logger)
+        tools.info('...', logger)
+        tools.info(self.files[-1], logger)
+        tools.info('-'*30, logger)        
 
 
 if __name__ == '__main__':

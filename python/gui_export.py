@@ -219,7 +219,7 @@ class PageCopy(QWizardPage):
             if os.path.exists(root):
                 playlist = self.config.playlist
                 if playlist:
-                    playlist.export(root, 1 if self.firstOnly else 5, log = self.log)
+                    playlist.export(root, 1 if self.firstOnly else 0, log = self.log)
 
         except Exception as ex:
 

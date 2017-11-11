@@ -10,6 +10,7 @@ import datetime
 import shutil
 import psutil
 import glob
+import logging
 
 
 INVALID = -1
@@ -113,8 +114,6 @@ def procstart(path, args=[]):
     dir = os.path.dirname(path)
     name = os.path.basename(path)
 
-    print('start process ' + name)
-
     pid = procid(name)
 
     if pid == INVALID:
@@ -133,10 +132,22 @@ def procstop(pid):
     name = procname(pid)   
 
     if name:
-
-        print('stop process ' + name)
     
         try:
             psutil.Process(pid).terminate()
         except Exception as e:
             print(e)    
+
+
+def info(message : str, logger = None):
+    if logger:
+        logger.info(message)
+    else:
+        print(message) 
+
+
+def error(message : str, logger = None):
+    if logger:
+        logger.error(message)
+    else:
+        print('ERROR ' + message) 

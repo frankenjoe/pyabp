@@ -120,6 +120,7 @@ class Control(QGroupBox):
         (track, length, position, duration, path) = info
 
         if track >= 0:
+
             self.trackPathLabel.setText(os.path.basename(path))
             self.trackPathLabel.setToolTip(path)
             self.trackNumberLabel.setText(str(track+1) + ' / ' + str(length))               

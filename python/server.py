@@ -5,7 +5,12 @@ import tools
 class Server:
 
 
+    logger = None
     pid = tools.INVALID
+
+
+    def __init__(self, logger = None):
+        self.logger = logger
 
 
     def start(self, path, conf='mpd.conf'):
@@ -17,11 +22,13 @@ class Server:
         if tools.islinux():
             pass # TODO
         else:
+            tools.info('start process ' + path, self.logger)
             self.pid = tools.procstart(path, [conf]) 
     
 
     def stop(self):
         
+        tools.info('stop process ' + str(self.pid), self.logger)
         tools.procstop(self.pid)
 
 
