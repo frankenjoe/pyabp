@@ -2,10 +2,11 @@ import sys
 import psutil
 import os
 import shutil
+import logging
 
-from PyQt5.QtGui import (QIcon, QFont)
+from PyQt5.QtGui import (QIcon, QFont, QPixmap)
 from PyQt5.QtCore import (Qt, QTime, QEvent, QRect)
-from PyQt5.QtWidgets import (QApplication, QWidget, QDesktopWidget, QWizard, QWizardPage, QComboBox, QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QLayout)
+from PyQt5.QtWidgets import (QApplication, QWidget, QDesktopWidget, QWizard, QWizardPage, QProgressBar, QComboBox, QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QLayout, QMessageBox, QSizePolicy)
 
 import tools
 from gui_library import Library
@@ -13,9 +14,14 @@ from playlist import Playlist
 from config import Config
 from scanner import Scanner
 from gui_log import Log
+from database import Database
 
 
+LOGFILE = '../pyabpex.log'
 CONFFILE = '../pyabp.init'
+DBFILE = '../pyabp.json'
+TITLE = 'Kopiere Audiobuch'
+ICONFILE = '../pics/player.ico'
 
 
 def askUser(parent: QWidget, text: str):
@@ -28,20 +34,47 @@ def askUser(parent: QWidget, text: str):
 
 
 
-class PageSelectAudiobook(QWizardPage):
-    
+class PageInit(QWizardPage):
 
-    def __init__(self, config: Config, font: QFont):
+
+    def __init__(self, config: Config, font: QFont, image: QPixmap, logger=None):
 
         super().__init__()  
 
-        self.setTitle('Select Audiobook')
-        self.setSubTitle('Select the audiobook you want to copy (use the search field to filter the results)')
+        self.logger = logger
+
+        self.setFont(font)
+        self.setTitle('<font size="+2">Karte Einstecken</font>')
+        self.setSubTitle('<font size="+2">Stecke die SD Karte in den Kartenleser (siehe Bilder).</font>')
+
+        layout = QVBoxLayout()
+
+        label = QLabel()     
+        label.setPixmap(image)
+        layout.addWidget(label)
+            
+        self.setLayout(layout)
+
+
+class PageSelectAudiobook(QWizardPage):
+    
+
+    def __init__(self, config: Config, font: QFont, logger=None):
+
+        super().__init__()  
+
+        self.logger = logger
+
+        self.setTitle('<font size="+2">Wähle Titel</font>')
+        self.setSubTitle('<font size="+2">Wähle aus der Liste das Audiobuch, das du kopieren möchtest (Tipp: benutze das Suchfeld zum Filtern)</font>')
         self.setFont(font)
         self.config = config
 
-        self.scanner = Scanner()
-        playlists = self.scanner.scan(self.config)
+        self.database = Database(logger=self.logger)
+        self.database.open(DBFILE)
+
+        self.scanner = Scanner(self.config, self.database, logger=self.logger)
+        playlists = self.scanner.scan() 
         
         self.library = Library(playlists, font=font)
         self.library.view.clicked.connect(self.libraryClicked) 
@@ -74,12 +107,14 @@ class PageSelectAudiobook(QWizardPage):
 
 class PageSelectDrive(QWizardPage):
 
-    def __init__(self, config: Config, font: QFont):
+    def __init__(self, config: Config, font: QFont, logger=None):
 
         super().__init__()  
+
+        self.logger = logger
         
-        self.setTitle('Select Drive')      
-        self.setSubTitle('Select the drive to which the audiobook should be copied (existing audio files will be deleted)')
+        self.setTitle('<font size="+2">Wähle Ziel</font>')   
+        self.setSubTitle('<font size="+2">Wähle den Ort, an den das Audiobuch kopiert werden soll (existierende Dateien werden ggfs gelöscht)</font>')
         self.setFont(font)  
         self.config = config
 
@@ -92,7 +127,6 @@ class PageSelectDrive(QWizardPage):
         self.comboBoxDisk = QComboBox()
         self.comboBoxDisk.setFont(font)
         self.comboBoxDisk.currentTextChanged.connect(self.comboboxChanged)
-        self.comboBoxDisk.addItems(self.disks(removeableonly=True))
 
         layout = QVBoxLayout()        
         layout.addWidget(self.comboBoxDisk)       
@@ -109,14 +143,17 @@ class PageSelectDrive(QWizardPage):
         if os.path.exists(root):
             self.files = tools.getfiles(root, self.config.scanExtensions)
             if len(self.files) > 0:
-                self.label.setText ('<font color="red">WARNING: ' + str(len(self.files)) + ' files will be deleted</font>')   
+                self.label.setText ('<font color="red">WARNING: ' + str(len(self.files)) + ' Dateien werden gelöscht</font>')   
             else:
-                self.label.setText ('No files will be deleted')   
+                self.label.setText ('Keine Dateien werden gelöscht')   
+
+            for file in self.files:
+                self.log.print(file)
 
 
     def initializePage(self):
 
-        pass 
+        self.comboBoxDisk.addItems(self.disks(removeableonly=True))
 
 
     def isComplete(self):
@@ -132,7 +169,7 @@ class PageSelectDrive(QWizardPage):
 
     def validatePage(self):
 
-        return self.clear()
+        return self.clear() and self.copyFirst()
         
         
     def clear(self):
@@ -142,13 +179,40 @@ class PageSelectDrive(QWizardPage):
         try:
 
             for file in self.files:
-                self.log.print('delete ' + os.path.join(root, file))        
+                tools.info('delete ' + os.path.join(root, file), self.logger)        
                 os.remove(os.path.join(root, file))     
 
         except Exception as ex:
 
-            self.log.print(str(ex))
+            tools.error(str(ex), self.logger)
+            QMessageBox.warning(self, 'Error', str(ex))
+
             return False
+
+        return True
+
+
+    def copyFirst(self):
+
+        try:
+
+            root = self.config.exportDir
+            if os.path.exists(root):
+                playlist = self.config.playlist
+                if playlist and playlist.files:
+
+                    file = playlist.files[0]
+                    src = os.path.join(playlist.rootDir, playlist.bookDir, file)            
+                    dst = os.path.join(root, file)
+                    tools.info('copy ' + src + ' > ' + dst, self.logger)
+                    tools.copyfile(src, dst)
+
+        except Exception as ex:
+
+                tools.error(ex, self.logger)
+                QMessageBox.warning(self, 'Error', str(ex))            
+
+                return False
 
         return True
 
@@ -172,27 +236,33 @@ class PageSelectDrive(QWizardPage):
         return partitions
 
 
-class PageCopy(QWizardPage):
+class PageCopyFiles(QWizardPage):
 
 
-    def __init__(self, config: Config, font: QFont, firstOnly: bool = False):
+    def __init__(self, config: Config, font: QFont, image: QPixmap, logger=None):
 
         super().__init__()  
 
-        self.setTitle('Copy file(s)')
-        self.setSubTitle('Click "Next" to copy the first file of the audiobook.' if firstOnly else 'Click "Next" to copy all files of the audiobook.')
+        self.logger = logger
+
+        self.setTitle('<font size="+2">Kopiere alle Dateien</font>')
+        self.setSubTitle('<font size="+2">Führe die Schritte auf den Bildern durch und klicke dann auf "Next".')
         self.setFont(font)
-        self.firstOnly = firstOnly
         self.config = config
 
-        font = QFont()
-        font.setPixelSize(self.config.fontSize)
-
-        self.log = Log()
-        self.log.console.setFont(font)
-
         layout = QVBoxLayout()
-        layout.addWidget(self.log)
+
+        label = QLabel()     
+        label.setPixmap(image)
+        layout.addWidget(label)
+
+        label = QLabel()
+        label.setFont(font)
+        label.setText('Kopierfortschritt:')
+        layout.addWidget(label)
+        self.progressBar = QProgressBar()
+        layout.addWidget(self.progressBar)
+            
         self.setLayout(layout)
 
 
@@ -219,75 +289,118 @@ class PageCopy(QWizardPage):
             if os.path.exists(root):
                 playlist = self.config.playlist
                 if playlist:
-                    playlist.export(root, 1 if self.firstOnly else 0, log = self.log)
+                    files = playlist.files
+                    self.copyPlaylist(playlist, root, logger=self.logger)
 
         except Exception as ex:
 
-                self.log.print(ex)
+                tools.error(ex, self.logger)
+                QMessageBox.warning(self, 'Error', str(ex))            
+
                 return False
 
         return True
 
 
+    def copyPlaylist(self, playlist, root, logger=None):
+
+        step = 100 / len(playlist.files)
+        stepValue = 0
+
+        for file in playlist.files:
+
+            src = os.path.join(playlist.rootDir, playlist.bookDir, file)            
+            dst = os.path.join(root, file)
+        
+            tools.info('copy ' + src + ' > ' + dst, logger)
+
+            stepValue = stepValue + step         
+            self.progressBar.setValue(stepValue)
+            self.progressBar.update()  
+            
+            tools.copyfile(src, dst)
+
+
 class PageFinal(QWizardPage):
 
 
-    def __init__(self, config: Config, font: QFont, firstOnly: bool = False):
+    def __init__(self, config: Config, font: QFont, image: QPixmap, logger=None):
 
         super().__init__()  
 
-        self.setTitle('Finished')
-        self.setSubTitle('The audiobook was successfully copied to the drive. Enjoy listening.')
+        self.logger = logger
+
         self.setFont(font)
+        self.setTitle('<font size="+2">Fertig!</font>')
+        self.setSubTitle('<font size="+2">Das Audiobuch wurde erfolgreiche kopiert. Viel Spaß beim Hören.</font>')
+
+        layout = QVBoxLayout()
+
+        label = QLabel()     
+        label.setPixmap(image)
+        layout.addWidget(label)
+            
+        self.setLayout(layout)
 
 
 class Export(QWizard):
-
 
     def __init__(self, parent = None):
 
         super().__init__()  
 
+        # logger
+
+        self.logger = logging.getLogger('pyabp')
+        logFileHandler = logging.FileHandler(LOGFILE)
+        logFormatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        logFileHandler.setFormatter(logFormatter)
+        self.logger.addHandler(logFileHandler) 
+        self.logger.setLevel(logging.DEBUG)
+
+        # config
+
+        self.readConfig()    
+        font = QFont()
+        font.setPixelSize(self.config.fontSize)
+
+        # window
+
         rect = QDesktopWidget().screenGeometry(-1)
-        width = rect.width() * 0.75;
-        height = rect.height() * 0.75;        
+        #width = rect.width() * 0.75;
+        width = 885
+        #height = rect.height() * 0.75;
+        height = 700        
         left = (rect.width() - width) / 2
         top = (rect.height() - height) / 2
         self.setGeometry(left, top, width, height) 
 
-        self.config = self.readConfig()
-
-        font = QFont()
-        font.setPixelSize(self.config.fontSize)
-
         self.parent = parent
-        self.setWindowTitle("Export Playlist")
-        #self.setFont(font)
+        self.setWindowTitle(TITLE)
+        self.setWindowIcon(QIcon(ICONFILE))
 
-        self.addPage(PageSelectAudiobook(self.config, font))
-        self.addPage(PageSelectDrive(self.config, font))
-        if self.config.exportSpecial:
-            self.addPage(PageCopy(self.config, font, firstOnly = True))        
-        self.addPage(PageCopy(self.config, font))
-        self.addPage(PageFinal(self.config, font))
+        image = QPixmap('../pics/export1.png')
+        self.addPage(PageInit(self.config, font, image, logger=self.logger)) 
+        self.addPage(PageSelectAudiobook(self.config, font, logger=self.logger))
+        self.addPage(PageSelectDrive(self.config, font, logger=self.logger))
+        image = QPixmap('../pics/export2.png')  
+        self.addPage(PageCopyFiles(self.config, font, image, logger=self.logger))        
+        image = QPixmap('../pics/export3.png')  
+        self.addPage(PageFinal(self.config, font, image, logger=self.logger))
 
         self.show()    
 
 
     def readConfig(self):
         
-        config = Config()
-        config.playlist = None
+        self.config = Config(logger=self.logger)
 
         if os.path.exists(CONFFILE):            
-            config.read(CONFFILE)   
+            self.config.read(CONFFILE)   
 
-        return config
-        
-
-    #def writeConfig(self):
-    #               
-    #    self.config.write(CONFFILE)
+        tools.info('-'*30, self.logger)
+        self.config.print(logger=self.logger)       
+        tools.info('-'*30, self.logger)
 
 
 if __name__ == '__main__':    

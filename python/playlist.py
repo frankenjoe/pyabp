@@ -27,26 +27,6 @@ class Playlist:
                     fp.write(path + '\n')
 
 
-    def export(self, root, count = 0, log=None, logger=None):
-
-        if count == 0:
-            count = len(self.files)
-
-        for file in self.files:
-            src = os.path.join(self.rootDir, self.bookDir, file)            
-            dst = os.path.join(root, file)
-        
-            if log:
-                log.print('copy ' + src + ' > ' + dst)
-            tools.info('copy ' + src + ' > ' + dst, logger)
-
-            tools.copyfile(src, dst)
-            count = count - 1
-
-            if count == 0:
-                break
-
-
     def print(self, logger=None):
 
         tools.info('-'*30, logger)

@@ -15,7 +15,6 @@ class Config:
     subDir = ''
     lastDir = ''
     exportDir = ''    
-    exportSpecial = False
     isPlaying = False
     fullScreen = False
     fontSize = 16        
@@ -44,7 +43,6 @@ class Config:
                 self.lastDir = config['MPD']['lastDir']
 
                 self.exportDir = config['EXPORT']['exportDir']            
-                self.exportSpecial = False if int(config['EXPORT']['exportSpecial']) <= 0 else True
 
                 self.isPlaying = False if int(config['GUI']['isPlaying']) <= 0 else True            
                 self.fullScreen = False if int(config['GUI']['fullScreen']) <= 0 else True
@@ -69,7 +67,6 @@ class Config:
         }
         config['EXPORT'] = {
             'exportDir' : self.exportDir, 
-            'exportSpecial' : 1 if self.exportSpecial else 0, 
         }
         config['GUI'] = { 
             'isPlaying' : 1 if self.isPlaying else 0, 
@@ -94,7 +91,6 @@ class Config:
         tools.info('subDir=' + self.subDir, logger)
         tools.info('lastDir=' + self.lastDir, logger)
         tools.info('exportDir=' + self.exportDir, logger)
-        tools.info('exportSpecial=' + str(self.exportSpecial), logger)
         tools.info('isPlaying=' + str(self.isPlaying), logger)
         tools.info('fullScreen=' + str(self.fullScreen), logger)
         tools.info('fontSize=' + str(self.fontSize), logger)
