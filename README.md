@@ -2,6 +2,10 @@
 
 Python Audiobook Player
 
+![player standalone](pics/pyabp1.png?raw=true "Player standalone")
+
+![player with library](pics/pyabp2.png.jpg?raw=true "Player with library")
+
 # Dependencies
 
 * pip3 install pyqt5 (linux: sudo apt-get install python3-pyqt5)
