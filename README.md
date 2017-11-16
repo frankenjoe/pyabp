@@ -1,10 +1,18 @@
 # pyabp
 
-Python Audiobook Player
+A multi-platform AudioBook Player written in Python using [Music Player Daemon](https://www.musicpd.org/) and [PyQt5](https://pypi.python.org/pypi/PyQt5)
+
+# Features
+
+* Playback from last position
+* Keeps list of audiobooks
+* Automatically scans for new items
+* Remembers playback location and volume for each title
+* Runs on Windows and Linux
 
 ![player standalone](pics/pyabp1.png?raw=true "Player standalone")
 
-![player with library](pics/pyabp2.png.jpg?raw=true "Player with library")
+![player with library](pics/pyabp2.png?raw=true "Player with library")
 
 # Dependencies
 
