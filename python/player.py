@@ -34,9 +34,14 @@ class Player:
 
     def connect(self):
 
-        try:                      
+        try:              
+
+            if self.client:
+                self.client.close()        
 
             self.client = PersistentMPDClient(host=self.host, port=self.port)
+            self.client.repeat(1)
+
             return True 
 
         except Exception as ex:
@@ -109,6 +114,10 @@ class Player:
             track = min(self.playlist.meta.track, self.playlist.meta.ntracks)            
             position = self.playlist.meta.position 
             tools.info('play ' + str(track) + '>' + str(position), self.logger)
+
+            # sometimes we get an "ERROR I/O operation on closed file" exception 
+            # after a certain time of inactivity, therefore we reconnect
+            self.connect()
 
             self.client.play()
             self.client.seek(track, position)
@@ -285,9 +294,7 @@ class Player:
 
                 state = status['state']
                 if state == 'stop':
-                    self.isPlay = False
-                    self.restart()
-                    self.play()
+                    self.isPlay = False                    
                     return self.status()
 
                 track = int(status['song'])

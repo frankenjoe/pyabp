@@ -23,7 +23,7 @@ class Server:
             pass # TODO
         else:
             tools.info('start process ' + path, self.logger)
-            self.pid = tools.procstart(path, [conf]) 
+            self.pid = tools.procstart(path, [conf], showConsole=False) 
     
 
     def stop(self):

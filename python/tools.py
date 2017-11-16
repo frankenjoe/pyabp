@@ -2,6 +2,7 @@ import os
 import errno
 import csv
 import sys
+import traceback
 import warnings
 import random
 import string
@@ -9,8 +10,10 @@ import platform
 import datetime
 import shutil
 import psutil
+import subprocess
 import glob
 import logging
+import win32api
 
 
 INVALID = -1
@@ -108,7 +111,7 @@ def procid(name):
     return INVALID
 
 
-def procstart(path, args=[]):
+def procstart(path, args=[], showConsole=True):
 
     path = os.path.realpath(path)
     dir = os.path.dirname(path)
@@ -118,7 +121,10 @@ def procstart(path, args=[]):
 
     if pid == INVALID:
         try:
-            p = psutil.Popen([path] + args, cwd=dir)
+            startupinfo = subprocess.STARTUPINFO()
+            if not showConsole:
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            p = psutil.Popen([path] + args, cwd=dir, startupinfo=startupinfo)
             pid = p.pid
         except Exception as e:
             print(e)
@@ -139,6 +145,35 @@ def procstop(pid):
             print(e)    
 
 
+def drives(removeableonly=False):
+        
+    partitions = []
+        
+    for partition in psutil.disk_partitions():     
+        tokens = partition.opts.split(',')            
+        if islinux():
+            if not removeableonly or 'flush' in tokens:
+                partitions.append(partition.mountpoint)
+        else:
+            if not removeableonly or 'removable' in tokens:
+                partitions.append(partition.mountpoint)
+
+    return partitions
+
+
+def drivebyname(name, removeableonly=False):
+
+    ds = drives(removeableonly)
+
+    for d in ds:
+        if not islinux():
+            n = win32api.GetVolumeInformation(d)[0]
+            if name == n:
+                return d
+
+    return None
+
+
 def info(message : str, logger = None):
     if logger:
         logger.info(message)
@@ -147,7 +182,9 @@ def info(message : str, logger = None):
 
 
 def error(message : str, logger = None):
-    if logger:
-        logger.error(message)
+
+    if logger:        
+        logger.exception(message)
     else:
-        print('ERROR ' + message) 
+        traceback.print_exc()
+        print('ERROR ' + str(message)) 

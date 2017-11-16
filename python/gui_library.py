@@ -41,6 +41,7 @@ class Library(QGroupBox):
     filter = None
     searchIcon = None
     searchLineEdit = None   
+    exportButton = None   
 
  
     def __init__(self, playlists, font=QFont()):
@@ -51,6 +52,9 @@ class Library(QGroupBox):
       
 
     def initUI(self, playlists, font):           
+
+        layout_top = QHBoxLayout()  
+        layout_main = QHBoxLayout()
 
         # list
 
@@ -81,17 +85,18 @@ class Library(QGroupBox):
             view.resizeColumnToContents(i)
         view.hideColumn(0)    
 
-        layout_main = QHBoxLayout()  
         layout_main.addWidget(view)
 
-        # filter
-
-        layout_top = QHBoxLayout()   
+        # filter 
 
         self.searchIcon = self.addIcon('../pics/lense.png', layout_top)
         self.searchLineEdit = self.addEdit(font, layout_top)               
         self.searchLineEdit.textChanged.connect(filterModel.setFilterFixedString)
         self.searchLineEdit.setToolTip('Type author or album name to filter library')
+
+        # export
+        self.exportButton = self.addButton('../pics/save.png', layout_top, setHeight = True, setWidth = True) 
+        self.exportButton.setToolTip('Export all files of selected playlist')
 
         # layout
 

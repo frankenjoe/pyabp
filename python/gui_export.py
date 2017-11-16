@@ -302,23 +302,24 @@ class PageCopyFiles(QWizardPage):
         return True
 
 
-    def copyPlaylist(self, playlist, root, logger=None):
+    def copyPlaylist(self, playlist, root, logger=None): 
 
-        step = 100 / len(playlist.files)
-        stepValue = 0
+        n_files = len(playlist.files)
+        self.progressBar.setMaximum(n_files)
 
-        for file in playlist.files:
+        for i, file in enumerate(playlist.files):                      
 
             src = os.path.join(playlist.rootDir, playlist.bookDir, file)            
             dst = os.path.join(root, file)
         
             tools.info('copy ' + src + ' > ' + dst, logger)
-
-            stepValue = stepValue + step         
-            self.progressBar.setValue(stepValue)
+            
+            self.progressBar.setValue(i)
             self.progressBar.update()  
             
             tools.copyfile(src, dst)
+
+        self.progressBar.setValue(n_files)
 
 
 class PageFinal(QWizardPage):
