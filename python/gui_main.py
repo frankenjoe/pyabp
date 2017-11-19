@@ -70,12 +70,19 @@ class App(QWidget):
         # database
 
         self.database = Database(logger=self.logger)
-        self.database.open(DBFILE)
+        try:
+            self.database.open(DBFILE)
+        except:
+            tools.error('could not open database ', self.logger)    
 
         # scan
 
-        self.scanner = Scanner(self.config, self.database, logger=self.logger)
-        playlists = self.scanner.scan() 
+        self.scanner = Scanner(self.config, self.database, logger=self.logger)        
+        try:
+            playlists = self.scanner.scan() 
+        except:
+            tools.error('could not scan playlists', self.logger)        
+            playlists = []
       
         # mpd
 

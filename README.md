@@ -24,7 +24,9 @@ A multi-platform AudioBook Player written in Python using [Music Player Daemon](
 
 * pip3 install psutil
 
-* pip3 install tinydb
+* pip3 install tinydb (>= 3.7)
+
+* pip3 install pypiwin32
 
 # Windows
 
