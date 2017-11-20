@@ -283,5 +283,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     init = Init(app, config, logger=logger)
     init.hide()
+    init.server.logger = logger
+    init.player.logger = logger    
     main = Main(app, config, init.server, init.player, init.playlists, logger=logger)    
     sys.exit(app.exec_())
