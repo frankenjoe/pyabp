@@ -16,7 +16,15 @@ A multi-platform AudioBook Player written in Python using [Music Player Daemon](
 
 # Dependencies
 
-* pip3 install pyqt5 (linux: sudo apt-get install python3-pyqt5)
+# Windows
+
+* edit .\bin\win64\mpd.conf and set 'music_directory'
+
+* run .\bin\win64\pyabt.exe
+
+# Linux
+
+* sudo apt-get install python3-pyqt5
 
 * pip3 install tinytag
 
@@ -25,18 +33,6 @@ A multi-platform AudioBook Player written in Python using [Music Player Daemon](
 * pip3 install psutil
 
 * pip3 install tinydb (>= 3.7)
-
-* pip3 install pypiwin32
-
-# Windows
-
-* copy https://www.musicpd.org/download/win32/0.20.10/mpd.exe to .\mpd
-
-* edit .\mpd\mpd.conf and set 'music_directory'
-
-* pyabp.cmd
-
-# Linux
 
 * install [https://www.musicpd.org/](mpd)
 

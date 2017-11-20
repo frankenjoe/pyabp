@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{6e01497f-31bf-4f2d-85ee-fc8a243065df}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>gui_main.py</StartupFile>
+    <StartupFile>pyabp.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -40,6 +40,7 @@
     <Compile Include="PersistentMPDClient.py" />
     <Compile Include="player.py" />
     <Compile Include="playlist.py" />
+    <Compile Include="pyabp.py" />
     <Compile Include="scanner.py" />
     <Compile Include="server.py" />
     <Compile Include="tools.py" />

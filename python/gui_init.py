@@ -105,7 +105,13 @@ class Init(QWidget):
         if self.player.connect():
             self.player.update()
         else:
-            tools.error('could not connect player', self.logger)            
+            tools.error('could not connect player', self.logger)      
+
+    
+        # redirect logging
+
+        self.server.logger = self.logger
+        self.player.logger = self.logger        
         
 
     def info(self, message : str):

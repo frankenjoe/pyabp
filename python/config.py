@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
     config = Config()
     config.startMpd = 1
-    config.confPath = '../mpd/mpd.conf'
+    config.confPath = 'mpd.conf'
     config.subDir = 'sub/dir'
     config.lastDir = 'last/dir'
     config.exportDir = '/export'
