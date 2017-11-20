@@ -24,6 +24,9 @@
   <ItemGroup>
     <Compile Include="config.py" />
     <Compile Include="database.py" />
+    <Compile Include="define.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="gui_control.py" />
     <Compile Include="gui_control_thread.py">
       <SubType>Code</SubType>
@@ -32,6 +35,7 @@
     <Compile Include="gui_library.py" />
     <Compile Include="gui_log.py" />
     <Compile Include="gui_main.py" />
+    <Compile Include="gui_init.py" />
     <Compile Include="meta.py" />
     <Compile Include="PersistentMPDClient.py" />
     <Compile Include="player.py" />

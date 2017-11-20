@@ -56,7 +56,7 @@ class Config:
             except:
                 tools.error('could not read config file "' + path + '"', logger)
 
-    def write(self, path):
+    def write(self, path, logger=None):
 
         config = ConfigParser()                    
         config['MPD'] = { 

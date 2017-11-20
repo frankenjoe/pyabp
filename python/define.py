@@ -1,0 +1,6 @@
+LOGFILE = '../pyabp.log'
+CONFFILE = '../pyabp.init'
+DBFILE = '../pyabp.json'
+MPDFILE = '..\\mpd\\mpd.exe'
+TITLE = 'Python Audiobook Player'
+ICONFILE = '../pics/player.ico'

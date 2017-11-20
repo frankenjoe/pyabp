@@ -15,6 +15,7 @@ import glob
 import logging
 import win32api
 
+from config import Config
 
 INVALID = -1
 
@@ -172,6 +173,25 @@ def drivebyname(name, removeableonly=False):
                 return d
 
     return None
+
+
+def readConfig(path, logger=None):
+        
+    config = Config(logger=logger)
+
+    if os.path.exists(path):            
+        config.read(path)   
+
+    info('-'*30, logger)
+    config.print(logger=logger)       
+    info('-'*30, logger)
+
+    return config
+
+
+def writeConfig(config, path, logger=None):
+                      
+    config.write(path, logger=None)
 
 
 def info(message : str, logger = None):

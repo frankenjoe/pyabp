@@ -10,6 +10,8 @@ from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt, 
 from PyQt5.QtWidgets import (qApp, QApplication, QCheckBox, QComboBox, QPushButton, QGridLayout, QGroupBox, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView, QMessageBox, QLayout, QFileDialog, QProgressDialog)
 
 import tools
+import define
+
 from player import Player
 from playlist import Playlist
 from scanner import Scanner
@@ -17,27 +19,19 @@ from config import Config
 from server import Server
 from database import Database
 
+from gui_init import Init
 from gui_library import Library
 from gui_control import Control
 from gui_control_thread import ControlThread
  
 
-LOGFILE = '../pyabp.log'
-CONFFILE = '../pyabp.init'
-DBFILE = '../pyabp.json'
-MPDFILE = '..\\mpd\\mpd.exe'
-TITLE = 'Python Audiobook Player'
-ICONFILE = '../pics/player.ico'
-
-
-class App(QWidget):
+class Main(QWidget):
  
 
     logger = None
     config = None
     database = None
-    font = None
-    scanner = None
+    font = None    
     server = None
     player = None
     library = None
@@ -46,61 +40,23 @@ class App(QWidget):
     layout = None
 
 
-    def __init__(self):
+    def __init__(self, app, config, server, player, playlists, logger=None):
 
         super().__init__()    
 
         # logger
 
-        self.logger = logging.getLogger('pyabp')
-        logFileHandler = logging.FileHandler(LOGFILE)
-        logFormatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-        logFileHandler.setFormatter(logFormatter)
-        self.logger.addHandler(logFileHandler) 
-        self.logger.setLevel(logging.DEBUG)
+        self.logger = logger
 
         # event filter
 
         qApp.installEventFilter(self) 
 
-        # config
-
-        self.readConfig()        
-
-        # database
-
-        self.database = Database(logger=self.logger)
-        try:
-            self.database.open(DBFILE)
-        except:
-            tools.error('could not open database ', self.logger)    
-
-        # scan
-
-        self.scanner = Scanner(self.config, self.database, logger=self.logger)        
-        try:
-            playlists = self.scanner.scan() 
-        except:
-            tools.error('could not scan playlists', self.logger)        
-            playlists = []
-      
-        # mpd
-
-        if self.config.startMpd:
-            if not tools.islinux():
-                self.server = Server(logger=self.logger)
-                self.server.start(MPDFILE, conf=os.path.realpath(self.config.confPath)) 
-
-        # player    
-
-        self.player = Player(self.database, logger=self.logger)
-        if self.player.connect():
-            self.player.update()
-        else:
-            tools.error('could not connect player', self.logger)            
-
         # init
-
+        
+        self.config = config
+        self.server = server
+        self.player = player
         self.initUI(playlists)    
 
         # load playlist
@@ -114,8 +70,8 @@ class App(QWidget):
 
     def initUI(self, playlists):
 
-        self.setWindowTitle(TITLE)
-        self.setWindowIcon(QIcon(ICONFILE))
+        self.setWindowTitle(define.TITLE)
+        self.setWindowIcon(QIcon(define.ICONFILE))
 
         # font
 
@@ -221,7 +177,12 @@ class App(QWidget):
 
     def closeEvent(self, event):        
 
-        self.writeConfig()
+        if self.player.playlist:            
+            self.config.lastDir = self.player.playlist.bookDir
+        self.config.isPlaying = self.player.isPlay
+        self.config.fullScreen = self.library.isVisible()   
+
+        tools.writeConfig(self.config, define.CONFFILE,logger=self.logger)
       
         self.player.close()
         if self.server:
@@ -232,35 +193,12 @@ class App(QWidget):
         event.accept()         
 
 
-    def readConfig(self):
-        
-        self.config = Config(logger=self.logger)
-
-        if os.path.exists(CONFFILE):            
-            self.config.read(CONFFILE)   
-
-        tools.info('-'*30, self.logger)
-        self.config.print(logger=self.logger)       
-        tools.info('-'*30, self.logger)
-        
-
-    def writeConfig(self):
-                      
-        if self.player.playlist:            
-            self.config.lastDir = self.player.playlist.bookDir
-
-        self.config.isPlaying = self.player.isPlay
-        self.config.fullScreen = self.library.isVisible()    
-        
-        self.config.write(CONFFILE)
-
-
     def loadPlaylist(self, playlist, play):
         
         playlist.print(logger=self.logger)
         self.player.load(playlist)   
         self.control.volumeSlider.setValue(playlist.meta.volume)        
-        self.setWindowTitle(TITLE + ' [ ' + playlist.meta.artist + ' - ' + playlist.meta.album + ' ]') 
+        self.setWindowTitle(define.TITLE + ' [ ' + playlist.meta.artist + ' - ' + playlist.meta.album + ' ]') 
         if play:
             self.player.play()   
  
@@ -327,6 +265,23 @@ class App(QWidget):
  
 if __name__ == '__main__':
 
+    # logger
+
+    logger = logging.getLogger('pyabp')
+    logFileHandler = logging.FileHandler(define.LOGFILE)
+    logFormatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    logFileHandler.setFormatter(logFormatter)
+    logger.addHandler(logFileHandler) 
+    logger.setLevel(logging.DEBUG)
+
+    # config
+
+    config = tools.readConfig(define.CONFFILE,logger=logger) 
+
+    # run
+
     app = QApplication(sys.argv)
-    ex = App()
+    init = Init(app, config, logger=logger)
+    init.hide()
+    main = Main(app, config, init.server, init.player, init.playlists, logger=logger)    
     sys.exit(app.exec_())
