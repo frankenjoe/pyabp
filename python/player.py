@@ -116,11 +116,7 @@ class Player:
             position = self.playlist.meta.position 
 
             tools.info('play ' + str(track) + '>' + str(position), self.logger)            
-
-            # sometimes we get an "ERROR I/O operation on closed file" exception 
-            # after a certain time of inactivity, therefore we reconnect
-            self.connect()
-
+          
             self.client.play()
             self.client.seek(track, position)
             self.isPlay = True
@@ -128,6 +124,15 @@ class Player:
         except Exception as ex:
 
             tools.error(ex,self.logger)
+
+            # sometimes we get an "ERROR I/O operation on closed file" exception 
+            # after a certain time of inactivity, so we try to reconnect
+
+            if retry:
+                self.client = None
+                if self.connect():
+                    self.play(retry=False)
+
 
 
     def move(self, position):
