@@ -45,6 +45,7 @@ class Scanner:
             return playlists
 
         self.database.clean()
+        tools.info('scan ' + self.config.rootDir, self.logger)
 
         for root,dirs,files in os.walk(os.path.join(self.config.rootDir, self.config.subDir)):                 
 

@@ -78,6 +78,7 @@ class Init(QWidget):
 
         # database
 
+        self.info('open database..')
         self.database = Database(logger=self)
         try:
             self.database.open(define.DBFILE)
@@ -86,6 +87,7 @@ class Init(QWidget):
 
         ## scan
 
+        self.info('update library..')
         self.scanner = Scanner(self.config, self.database, logger=self)        
         try:
             self.playlists = self.scanner.scan() 
@@ -94,6 +96,7 @@ class Init(QWidget):
       
         # mpd
 
+        self.info('start mpd..')
         if self.config.startMpd:
             if not tools.islinux():
                 self.server = Server(logger=self)
@@ -101,6 +104,7 @@ class Init(QWidget):
 
         # player    
 
+        self.info('start player..')
         self.player = Player(self.database, logger=self)
         if self.player.connect():
             self.player.update()

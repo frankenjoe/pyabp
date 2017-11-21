@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QPushButton, QG
 
 from playlist import Playlist
 import tools
+import define
 
 
 PLAYLIST, ARTIST, ALBUM, DURATION, COLUMNS = range(5)
@@ -89,13 +90,13 @@ class Library(QGroupBox):
 
         # filter 
 
-        self.searchIcon = self.addIcon('../pics/lense.png', layout_top)
+        self.searchIcon = self.addIcon(os.path.join(define.IMGDIR, 'lense.png'), layout_top)
         self.searchLineEdit = self.addEdit(font, layout_top)               
         self.searchLineEdit.textChanged.connect(filterModel.setFilterFixedString)
         self.searchLineEdit.setToolTip('Type author or album name to filter library')
 
         # export
-        self.exportButton = self.addButton('../pics/save.png', layout_top, setHeight = True, setWidth = True) 
+        self.exportButton = self.addButton(os.path.join(define.IMGDIR, 'save.png'), layout_top, setHeight = True, setWidth = True) 
         self.exportButton.setToolTip('Export all files of selected playlist')
 
         # layout

@@ -1,8 +1,8 @@
 [MPD]
-confpath = mpd.conf
 subdir = 
-startmpd = 1
 lastdir = 
+confpath = mpd\mpd.conf
+startmpd = 1
 
 [EXPORT]
 exportdir = 
@@ -13,8 +13,8 @@ fullscreen = 0
 fontsize = 16
 
 [SCAN]
-scannew = 1
+scanextensions = mp3;ogg;wav;flac
 scanmodified = 1
 scanall = 0
-scanextensions = mp3;ogg;wav;flac
+scannew = 1
 

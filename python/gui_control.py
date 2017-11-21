@@ -8,6 +8,7 @@ from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QPushButton, QSlider, QGridLayout, QGroupBox, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView)
 
 import tools
+import define
 
  
 class Control(QGroupBox):
@@ -51,20 +52,20 @@ class Control(QGroupBox):
 
         self.trackDurationLabel = self.addLabel(tools.friendlytime(0), font, layout_center)
 
-        self.libraryButton = self.addButton('../pics/list.png', layout_bottom)       
+        self.libraryButton = self.addButton(os.path.join(define.IMGDIR, 'list.png'), layout_bottom)       
         self.libraryButton.setToolTip('Show/hide library [Enter]') 
-        self.previousButton = self.addButton('../pics/previous.png', layout_bottom)
+        self.previousButton = self.addButton(os.path.join(define.IMGDIR, 'previous.png'), layout_bottom)
         self.previousButton.setToolTip('Jump to previous track [P]')
-        self.playButton = self.addButton('../pics/play.png', layout_bottom)
+        self.playButton = self.addButton(os.path.join(define.IMGDIR, 'play.png'), layout_bottom)
         self.playButton.setToolTip('Start playback of current track [Space]')
-        self.stopButton = self.addButton('../pics/pause.png', layout_bottom)
+        self.stopButton = self.addButton(os.path.join(define.IMGDIR, 'pause.png'), layout_bottom)
         self.stopButton.setToolTip('Stop playback of current track [Space]')
-        self.nextButton = self.addButton('../pics/next.png', layout_bottom)        
+        self.nextButton = self.addButton(os.path.join(define.IMGDIR, 'next.png'), layout_bottom)        
         self.nextButton.setToolTip('Jump to next track [N]')
-        self.restartButton = self.addButton('../pics/restart.png', layout_bottom)
+        self.restartButton = self.addButton(os.path.join(define.IMGDIR, 'restart.png'), layout_bottom)
         self.restartButton.setToolTip('Jump to first track')
 
-        self.volumeIcon = self.addIcon('../pics/volume.png', layout_bottom)        
+        self.volumeIcon = self.addIcon(os.path.join(define.IMGDIR, 'volume.png'), layout_bottom)        
         self.volumeSlider = QSlider(Qt.Horizontal)  
         self.volumeSlider.setFixedWidth(75)
         self.volumeSlider.setMaximum(100)
