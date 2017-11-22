@@ -89,13 +89,13 @@ class Main(QWidget):
 
         self.control = Control(font=font)
         self.control.libraryButton.clicked.connect(self.showLibrary)
-        self.control.restartButton.clicked.connect(self.player.restart)
-        self.control.previousButton.clicked.connect(self.player.previous)
-        self.control.playButton.clicked.connect(self.player.play)        
-        self.control.stopButton.clicked.connect(self.player.stop)
-        self.control.nextButton.clicked.connect(self.player.next)
-        self.control.volumeSlider.valueChanged.connect(self.volumeChanged)
-        self.control.trackPositionSlider.sliderMoved.connect(self.positionChanged)
+        self.control.restartButton.clicked.connect(self.onRestart)
+        self.control.previousButton.clicked.connect(self.onPrevious)
+        self.control.playButton.clicked.connect(self.onPlay)        
+        self.control.stopButton.clicked.connect(self.onStop)
+        self.control.nextButton.clicked.connect(self.onNext)
+        self.control.volumeSlider.valueChanged.connect(self.onVolumeChanged)
+        self.control.trackPositionSlider.sliderMoved.connect(self.onPositionChanged)
         self.control.trackPositionSlider.setTracking(False)
         self.controlThread = ControlThread(self.player, self.control)               
 
@@ -251,12 +251,32 @@ class Main(QWidget):
                 tools.error(ex, self.logger)
 
 
-    def volumeChanged(self, value):
+    def onPlay(self):
+        self.player.play()  
+
+
+    def onStop(self):
+        self.player.stop()
+
+
+    def onNext(self):
+        self.player.next()  
+
+
+    def onPrevious(self):
+        self.player.previous()  
+
+
+    def onRestart(self):
+        self.player.restart()  
+
+
+    def onVolumeChanged(self, value):
         
         self.player.volume(value)
 
 
-    def positionChanged(self, value):
+    def onPositionChanged(self, value):
         
         self.player.move(value)
 
