@@ -14,6 +14,7 @@ class Config:
     rootDir = ''  
     subDir = ''
     lastDir = ''
+    driveName = ''
     exportDir = ''    
     isPlaying = False
     fullScreen = False
@@ -42,6 +43,7 @@ class Config:
                 self.subDir = config['MPD']['subDir']            
                 self.lastDir = config['MPD']['lastDir']
 
+                self.driveName = config['EXPORT']['driveName']      
                 self.exportDir = config['EXPORT']['exportDir']            
 
                 self.isPlaying = False if int(config['GUI']['isPlaying']) <= 0 else True            
@@ -66,6 +68,7 @@ class Config:
             'lastDir' : self.lastDir, 
         }
         config['EXPORT'] = {
+            'driveName' : self.driveName, 
             'exportDir' : self.exportDir, 
         }
         config['GUI'] = { 
@@ -90,6 +93,7 @@ class Config:
         tools.info('rootDir=' + self.rootDir, logger)      
         tools.info('subDir=' + self.subDir, logger)
         tools.info('lastDir=' + self.lastDir, logger)
+        tools.info('driveName=' + self.driveName, logger)
         tools.info('exportDir=' + self.exportDir, logger)
         tools.info('isPlaying=' + str(self.isPlaying), logger)
         tools.info('fullScreen=' + str(self.fullScreen), logger)
@@ -111,6 +115,7 @@ if __name__ == '__main__':
     config.confPath = 'mpd.conf'
     config.subDir = 'sub/dir'
     config.lastDir = 'last/dir'
+    config.driveName = 'AUDIOBOOKS'
     config.exportDir = '/export'
     config.isPlaying = True
     config.fullScreen = True

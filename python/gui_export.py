@@ -3,12 +3,15 @@ import psutil
 import os
 import shutil
 import logging
+import time
+from threading import Thread
 
 from PyQt5.QtGui import (QIcon, QFont, QPixmap)
 from PyQt5.QtCore import (Qt, QTime, QEvent, QRect)
 from PyQt5.QtWidgets import (QApplication, QWidget, QDesktopWidget, QWizard, QWizardPage, QProgressBar, QComboBox, QHBoxLayout, QVBoxLayout, QGridLayout, QLabel, QLayout, QMessageBox, QSizePolicy)
 
 import tools
+import define
 from gui_library import Library
 from playlist import Playlist
 from config import Config
@@ -17,11 +20,7 @@ from gui_log import Log
 from database import Database
 
 
-LOGFILE = '../pyabpex.log'
-CONFFILE = '../pyabp.init'
-DBFILE = '../pyabp.json'
-TITLE = 'Kopiere Audiobuch'
-ICONFILE = '../pics/player.ico'
+TITLE = 'Kopiere Hörbuch'
 
 
 def askUser(parent: QWidget, text: str):
@@ -37,23 +36,56 @@ def askUser(parent: QWidget, text: str):
 class PageInit(QWizardPage):
 
 
+    thread = None
+
+
     def __init__(self, config: Config, font: QFont, image: QPixmap, logger=None):
 
         super().__init__()  
 
         self.logger = logger
+        self.config = config
 
         self.setFont(font)
         self.setTitle('<font size="+2">Karte Einstecken</font>')
-        self.setSubTitle('<font size="+2">Stecke die SD Karte in den Kartenleser (siehe Bilder).</font>')
+        self.setSubTitle('<font size="+2">Nimm die Karte aus dem Lautsprecher, führe sie in den Adapter ein und stecke diesen an den Computer an.</font>')
 
         layout = QVBoxLayout()
 
         label = QLabel()     
         label.setPixmap(image)
+        label.setContentsMargins(0,20,0,0)
         layout.addWidget(label)
             
-        self.setLayout(layout)
+        self.setLayout(layout) 
+
+    
+    def isComplete(self):
+
+        name = self.config.driveName
+        
+        tools.info('look for drive "' + name + '"', logger=self.logger)
+        
+        drive = tools.drivebyname(name)
+        if drive:                
+            tools.info('set export directory to "' + drive + '"', logger=self.logger)   
+            self.config.exportDir = drive         
+            return True
+              
+        thread = Thread(target=self.waitForDrive, args=(self.completeChanged,name,), daemon=True)        
+        thread.start()      
+
+        return False
+
+
+    def waitForDrive(self, completeChanged, driveName):            
+       
+        while not tools.drivebyname(driveName):            
+            tools.info('wait for drive "' + driveName + '"', logger=self.logger)            
+            time.sleep(1) 
+
+        completeChanged.emit()    
+        
 
 
 class PageSelectAudiobook(QWizardPage):
@@ -66,12 +98,12 @@ class PageSelectAudiobook(QWizardPage):
         self.logger = logger
 
         self.setTitle('<font size="+2">Wähle Titel</font>')
-        self.setSubTitle('<font size="+2">Wähle aus der Liste das Audiobuch, das du kopieren möchtest (Tipp: benutze das Suchfeld zum Filtern)</font>')
+        self.setSubTitle('<font size="+2">Wähle aus der Liste das Hörbuch, das du kopieren möchtest (Tipp: benutze das Suchfeld zum Filtern)</font>')
         self.setFont(font)
         self.config = config
 
         self.database = Database(logger=self.logger)
-        self.database.open(DBFILE)
+        self.database.open(define.DBFILE)
 
         self.scanner = Scanner(self.config, self.database, logger=self.logger)
         playlists = self.scanner.scan() 
@@ -105,71 +137,63 @@ class PageSelectAudiobook(QWizardPage):
         self.completeChanged.emit()
 
 
-class PageSelectDrive(QWizardPage):
+class PagePrepareDrive(QWizardPage):
 
-    def __init__(self, config: Config, font: QFont, logger=None):
+    def __init__(self, config: Config, font: QFont, image: QPixmap, logger=None):
 
         super().__init__()  
 
         self.logger = logger
         
-        self.setTitle('<font size="+2">Wähle Ziel</font>')   
-        self.setSubTitle('<font size="+2">Wähle den Ort, an den das Audiobuch kopiert werden soll (existierende Dateien werden ggfs gelöscht)</font>')
+        self.setTitle('<font size="+2">Kopiere erste Datei</font>')   
+        self.setSubTitle('<font size="+2">Entferne den Kartenleser aus dem Computer und nimm die Karte aus dem Kartenleser. Stecke die Karte anschließend in den Lautsprecher und starte diesen.</font>')
         self.setFont(font)  
         self.config = config
 
-        self.label = QLabel('')
-        self.label.setFont(font)
+        layout = QVBoxLayout()
 
-        self.log = Log()
-        self.log.console.setFont(font)
-
-        self.comboBoxDisk = QComboBox()
-        self.comboBoxDisk.setFont(font)
-        self.comboBoxDisk.currentTextChanged.connect(self.comboboxChanged)
-
-        layout = QVBoxLayout()        
-        layout.addWidget(self.comboBoxDisk)       
-        layout.addWidget(self.label)  
-        layout.addWidget(self.log)  
+        label = QLabel()     
+        label.setContentsMargins(0,20,0,0)
+        label.setPixmap(image)
+        layout.addWidget(label)
  
         self.setLayout(layout)
 
 
-    def comboboxChanged(self):
-
-        root = self.comboBoxDisk.currentText()
-    
-        if os.path.exists(root):
-            self.files = tools.getfiles(root, self.config.scanExtensions)
-            if len(self.files) > 0:
-                self.label.setText ('<font color="red">WARNING: ' + str(len(self.files)) + ' Dateien werden gelöscht</font>')   
-            else:
-                self.label.setText ('Keine Dateien werden gelöscht')   
-
-            for file in self.files:
-                self.log.print(file)
-
-
     def initializePage(self):
-
-        self.comboBoxDisk.addItems(self.disks(removeableonly=True))
+    
+        self.clear() and self.copyFirst()
 
 
     def isComplete(self):
 
-        root = self.comboBoxDisk.currentText()
-    
-        if root and os.path.exists(root):
-            self.config.exportDir = root
+        name = self.config.driveName
+        
+        tools.info('look for drive "' + name + '"', logger=self.logger) 
+        
+        drive = tools.drivebyname(name)
+        if not drive:                            
+            tools.info('drive "' + name + '" has been removed', logger=self.logger) 
             return True
+              
+        thread = Thread(target=self.waitForRemoveDrive, args=(self.completeChanged,name,), daemon=True)        
+        thread.start()      
 
         return False
 
 
+    def waitForRemoveDrive(self, completeChanged, driveName):            
+       
+        while tools.drivebyname(driveName):            
+            tools.info('wait for drive "' + driveName + '" to be removed', logger=self.logger)            
+            time.sleep(1) 
+
+        completeChanged.emit()    
+
+
     def validatePage(self):
 
-        return self.clear() and self.copyFirst()
+        return True
         
         
     def clear(self):
@@ -178,9 +202,12 @@ class PageSelectDrive(QWizardPage):
     
         try:
 
-            for file in self.files:
-                tools.info('delete ' + os.path.join(root, file), self.logger)        
-                os.remove(os.path.join(root, file))     
+            if os.path.exists(root):
+                files = tools.getfiles(root, self.config.scanExtensions)
+                if len(files) > 0:                
+                    for file in files:
+                        tools.info('delete ' + os.path.join(root, file), self.logger)        
+                        os.remove(os.path.join(root, file))     
 
         except Exception as ex:
 
@@ -217,25 +244,6 @@ class PageSelectDrive(QWizardPage):
         return True
 
 
-    def disks(self, removeableonly=False):
-        
-        partitions = []
-        
-        if self.config.exportDir and os.path.exists(self.config.exportDir):
-            partitions.append(self.config.exportDir)
-
-        for partition in psutil.disk_partitions():     
-            tokens = partition.opts.split(',')            
-            if tools.islinux():
-                if not removeableonly or 'flush' in tokens:
-                    partitions.append(partition.mountpoint)
-            else:
-                if not removeableonly or 'removable' in tokens:
-                    partitions.append(partition.mountpoint)
-
-        return partitions
-
-
 class PageCopyFiles(QWizardPage):
 
 
@@ -246,7 +254,7 @@ class PageCopyFiles(QWizardPage):
         self.logger = logger
 
         self.setTitle('<font size="+2">Kopiere alle Dateien</font>')
-        self.setSubTitle('<font size="+2">Führe die Schritte auf den Bildern durch und klicke dann auf "Next".')
+        self.setSubTitle('<font size="+2">Nimm die Karte aus dem Lautsprecher, führe sie in den Adapter ein und stecke diesen an den Computer an.')
         self.setFont(font)
         self.config = config
 
@@ -254,6 +262,7 @@ class PageCopyFiles(QWizardPage):
 
         label = QLabel()     
         label.setPixmap(image)
+        label.setContentsMargins(0,20,0,20)
         layout.addWidget(label)
 
         label = QLabel()
@@ -270,10 +279,32 @@ class PageCopyFiles(QWizardPage):
     
         pass
 
-
+    
     def isComplete(self):
 
-        return True
+        name = self.config.driveName
+        
+        tools.info('look for drive "' + name + '"', logger=self.logger)
+        
+        drive = tools.drivebyname(name)
+        if drive:                
+            tools.info('set export directory to "' + drive + '"', logger=self.logger)   
+            self.config.exportDir = drive         
+            return True
+              
+        thread = Thread(target=self.waitForDrive, args=(self.completeChanged,name,), daemon=True)        
+        thread.start()      
+
+        return False
+
+
+    def waitForDrive(self, completeChanged, driveName):            
+       
+        while not tools.drivebyname(driveName):            
+            tools.info('wait for drive "' + driveName + '"', logger=self.logger)            
+            time.sleep(1) 
+
+        completeChanged.emit()  
 
 
     def validatePage(self):
@@ -329,15 +360,16 @@ class PageFinal(QWizardPage):
 
         super().__init__()  
 
-        self.logger = logger
+        self.logger = logger        
 
         self.setFont(font)
         self.setTitle('<font size="+2">Fertig!</font>')
-        self.setSubTitle('<font size="+2">Das Audiobuch wurde erfolgreiche kopiert. Viel Spaß beim Hören.</font>')
+        self.setSubTitle('<font size="+2">Das Hörbuch wurde erfolgreiche kopiert. Viel Spaß beim Hören.</font>')
 
         layout = QVBoxLayout()
 
         label = QLabel()     
+        label.setContentsMargins(0,20,0,0)
         label.setPixmap(image)
         layout.addWidget(label)
             
@@ -346,26 +378,22 @@ class PageFinal(QWizardPage):
 
 class Export(QWizard):
 
-    def __init__(self, parent = None):
+    def __init__(self, app, config, parent=None, logger=None):
 
         super().__init__()  
 
         # logger
 
-        self.logger = logging.getLogger('pyabp')
-        logFileHandler = logging.FileHandler(LOGFILE)
-        logFormatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-        logFileHandler.setFormatter(logFormatter)
-        self.logger.addHandler(logFileHandler) 
-        self.logger.setLevel(logging.DEBUG)
+        self.logger = logger
 
         # config
 
-        self.readConfig()    
-        font = QFont()
-        font.setPixelSize(self.config.fontSize)
+        self.config = config
 
         # window
+
+        font = QFont()
+        font.setPixelSize(self.config.fontSize)
 
         rect = QDesktopWidget().screenGeometry(-1)
         #width = rect.width() * 0.75;
@@ -378,35 +406,39 @@ class Export(QWizard):
 
         self.parent = parent
         self.setWindowTitle(TITLE)
-        self.setWindowIcon(QIcon(ICONFILE))
+        self.setWindowIcon(QIcon(define.ICONFILE))
 
-        image = QPixmap('../pics/export1.png')
+        image = QPixmap('pics/export1.png')
         self.addPage(PageInit(self.config, font, image, logger=self.logger)) 
         self.addPage(PageSelectAudiobook(self.config, font, logger=self.logger))
-        self.addPage(PageSelectDrive(self.config, font, logger=self.logger))
-        image = QPixmap('../pics/export2.png')  
+        image = QPixmap('pics/export2.png')
+        self.addPage(PagePrepareDrive(self.config, font, image, logger=self.logger))
+        image = QPixmap('pics/export3.png')  
         self.addPage(PageCopyFiles(self.config, font, image, logger=self.logger))        
-        image = QPixmap('../pics/export3.png')  
+        image = QPixmap('pics/export4.png')  
         self.addPage(PageFinal(self.config, font, image, logger=self.logger))
 
         self.show()    
 
 
-    def readConfig(self):
-        
-        self.config = Config(logger=self.logger)
-
-        if os.path.exists(CONFFILE):            
-            self.config.read(CONFFILE)   
-
-        tools.info('-'*30, self.logger)
-        self.config.print(logger=self.logger)       
-        tools.info('-'*30, self.logger)
-
-
 if __name__ == '__main__':    
 
+    # logger
+
+    logger = logging.getLogger('pyabp')
+    logFileHandler = logging.FileHandler(define.LOGFILE)
+    logFormatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    logFileHandler.setFormatter(logFormatter)
+    logger.addHandler(logFileHandler) 
+    logger.setLevel(logging.DEBUG)
+
+    # config
+
+    config = tools.readConfig(define.CONFFILE,logger=logger) 
+
+    # run
+
     app = QApplication(sys.argv)
-    ex = Export()
+    ex = Export(app, config, logger=logger)
     sys.exit(app.exec_())    
    
