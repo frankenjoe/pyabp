@@ -274,6 +274,8 @@ class PageCopyFiles(QWizardPage):
             
         self.setLayout(layout)
 
+        self.isComplete = False
+
 
     def initializePage(self):
     
@@ -281,6 +283,9 @@ class PageCopyFiles(QWizardPage):
 
     
     def isComplete(self):
+
+        if self.isComplete:
+            return True
 
         name = self.config.driveName
         
@@ -290,6 +295,8 @@ class PageCopyFiles(QWizardPage):
         if drive:                
             tools.info('set export directory to "' + drive + '"', logger=self.logger)   
             self.config.exportDir = drive         
+            self.copy()
+            self.isComplete = True
             return True
               
         thread = Thread(target=self.waitForDrive, args=(self.completeChanged,name,), daemon=True)        
@@ -309,7 +316,7 @@ class PageCopyFiles(QWizardPage):
 
     def validatePage(self):
 
-        return self.copy()
+        return True
 
 
     def copy(self):
