@@ -13,7 +13,6 @@ import psutil
 import subprocess
 import glob
 import logging
-import win32api
 
 from config import Config
 
@@ -167,7 +166,8 @@ def drivebyname(name, removeableonly=False):
     ds = drives(removeableonly)
 
     for d in ds:
-        if not islinux():
+        if not islinux():            
+            import win32api                        
             n = win32api.GetVolumeInformation(d)[0]
             if name == n:
                 return d

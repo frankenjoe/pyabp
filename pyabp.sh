@@ -2,4 +2,4 @@
 
 cd "$(dirname "$0")"
 cd python
-python3 gui_main.py
+python3 pyabp.py

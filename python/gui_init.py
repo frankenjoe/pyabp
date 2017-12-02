@@ -114,7 +114,8 @@ class Init(QWidget):
     
         # redirect logging
 
-        self.server.logger = self.logger
+        if not tools.islinux():
+            self.server.logger = self.logger
         self.player.logger = self.logger        
         
 
