@@ -109,8 +109,6 @@ class Player:
 
     def play(self, connectOnError=True):
 
-        print(connectOnError)
-
         if not self.client or not self.playlist or self.isPlay:
             return        
 

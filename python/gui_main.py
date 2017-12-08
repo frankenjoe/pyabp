@@ -108,15 +108,15 @@ class Main(QWidget):
 
         # show
         
-        self.setWindowState(Qt.WindowNoState)
-        self.setWindowFlags(
-            Qt.Window |
-            Qt.CustomizeWindowHint |
-            Qt.WindowTitleHint |
-            Qt.WindowCloseButtonHint |
-            Qt.WindowMinimizeButtonHint |
-            Qt.WindowStaysOnTopHint
-        )        
+        #self.setWindowState(Qt.WindowNoState)
+        #self.setWindowFlags(
+        #    Qt.Window |
+        #    Qt.CustomizeWindowHint |
+        #    Qt.WindowTitleHint |
+        #    Qt.WindowCloseButtonHint |
+        #    Qt.WindowMinimizeButtonHint |
+        #    Qt.WindowStaysOnTopHint
+        #)        
         self.layout.setSizeConstraint(QLayout.SetFixedSize | QLayout.SetMinimumSize)          
         self.show()               
         if self.config.fullScreen:
@@ -128,12 +128,30 @@ class Main(QWidget):
         isVisible = not self.library.isVisible()
         self.library.setVisible(isVisible)
         if not isVisible:                       
-            self.setWindowState(Qt.WindowNoState) 
+            #self.setWindowState(Qt.WindowNoState) 
+            #self.setWindowFlags(
+            #    Qt.Window |
+            #    Qt.CustomizeWindowHint |
+            #    Qt.WindowTitleHint |
+            #    Qt.WindowCloseButtonHint |
+            #    Qt.WindowMinimizeButtonHint |
+            #    Qt.WindowStaysOnTopHint
+            #)  
             self.layout.setSizeConstraint(QLayout.SetFixedSize | QLayout.SetMinimumSize)
             self.setFixedSize(self.layout.sizeHint())            
         else:                        
-            self.setWindowState(Qt.WindowFullScreen)             
+            #self.setWindowState(Qt.WindowMaximized)       
+            #self.setWindowFlags(
+            #    Qt.Window |
+            #    Qt.CustomizeWindowHint |
+            #    Qt.WindowTitleHint |
+            #    Qt.WindowCloseButtonHint |
+            #    Qt.WindowFullscreenButtonHint |
+            #    Qt.WindowMinimizeButtonHint |
+            #    Qt.WindowStaysOnTopHint
+            #)      
             self.layout.setSizeConstraint(QLayout.SetMaximumSize)
+            #self.setFixedSize(self.layout.sizeHint()) 
 
 
     def eventFilter(self, source, event):
@@ -296,7 +314,7 @@ if __name__ == '__main__':
 
     # config
 
-    config = tools.readConfig(define.CONFFILE,logger=logger) 
+    config = tools.readConfig(define.CONFFILE,logger=None) 
 
     # run
 
