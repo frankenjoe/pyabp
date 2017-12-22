@@ -171,6 +171,10 @@ def drivebyname(name, removeableonly=False):
             n = win32api.GetVolumeInformation(d)[0]
             if name == n:
                 return d
+        else:
+            parts = d.split('/')
+            if name == parts[-1]:                
+                return d
 
     return None
 

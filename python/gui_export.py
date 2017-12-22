@@ -39,16 +39,17 @@ class PageInit(QWizardPage):
     thread = None
 
 
-    def __init__(self, config: Config, font: QFont, image: QPixmap, logger=None):
+    def __init__(self, wizard, config: Config, font: QFont, image: QPixmap, logger=None):
 
         super().__init__()  
 
+        self.wizard = wizard
         self.logger = logger
         self.config = config
 
         self.setFont(font)
         self.setTitle('<font size="+2">Karte Einstecken</font>')
-        self.setSubTitle('<font size="+2">Nimm die Karte aus dem Lautsprecher, führe sie in den Adapter ein und stecke diesen an den Computer an.</font>')
+        self.setSubTitle('<font size="+2">Karte aus Lautsprecher in den Computer.</font>')
 
         layout = QVBoxLayout()
 
@@ -57,10 +58,24 @@ class PageInit(QWizardPage):
         label.setContentsMargins(0,20,0,0)
         layout.addWidget(label)
             
-        self.setLayout(layout) 
+        self.setLayout(layout)             
+        
+        
+    def initializePage(self):
+    
+        tools.info('*** connect drive')    
+        self.isComplete = False
+        
+            
+    def validatePage(self):
+
+        return True            
 
     
     def isComplete(self):
+        
+        if self.isComplete:
+            return True
 
         name = self.config.driveName
         
@@ -69,7 +84,9 @@ class PageInit(QWizardPage):
         drive = tools.drivebyname(name)
         if drive:                
             tools.info('set export directory to "' + drive + '"', logger=self.logger)   
-            self.config.exportDir = drive         
+            self.config.exportDir = drive   
+            self.isComplete = True
+            self.wizard.next()
             return True
               
         thread = Thread(target=self.waitForDrive, args=(self.completeChanged,name,), daemon=True)        
@@ -91,14 +108,15 @@ class PageInit(QWizardPage):
 class PageSelectAudiobook(QWizardPage):
     
 
-    def __init__(self, config: Config, font: QFont, logger=None):
+    def __init__(self, wizard, config: Config, font: QFont, logger=None):
 
         super().__init__()  
 
+        self.wizard = wizard
         self.logger = logger
 
         self.setTitle('<font size="+2">Wähle Titel</font>')
-        self.setSubTitle('<font size="+2">Wähle aus der Liste das Hörbuch, das du kopieren möchtest (Tipp: benutze das Suchfeld zum Filtern)</font>')
+        self.setSubTitle('<font size="+2">Hörbuch aus Liste wählen. (Tipp: benutze Suchfeld zum Filtern)</font>')
         self.setFont(font)
         self.config = config
 
@@ -118,15 +136,27 @@ class PageSelectAudiobook(QWizardPage):
         
     def initializePage(self):
     
-        pass
+        tools.info('*** select audiobook')   
+        self.isComplete = False         
+        
+        
+    def validatePage(self):
+
+        return True
 
 
     def isComplete(self):
+        
+        if self.isComplete:
+            return True           
 
         playlist = self.library.getPlaylist()
+        print(playlist)
 
         if playlist:
             self.config.playlist = playlist
+            self.isComplete = True
+            self.wizard.next()                     
             return True
 
         return False
@@ -139,14 +169,15 @@ class PageSelectAudiobook(QWizardPage):
 
 class PagePrepareDrive(QWizardPage):
 
-    def __init__(self, config: Config, font: QFont, image: QPixmap, logger=None):
+    def __init__(self, wizard, config: Config, font: QFont, image: QPixmap, logger=None):
 
         super().__init__()  
 
+        self.wizard = wizard
         self.logger = logger
         
         self.setTitle('<font size="+2">Kopiere erste Datei</font>')   
-        self.setSubTitle('<font size="+2">Entferne den Kartenleser aus dem Computer und nimm die Karte aus dem Kartenleser. Stecke die Karte anschließend in den Lautsprecher und starte diesen.</font>')
+        self.setSubTitle('<font size="+2">Speicherkarte aus Computer in Lautsprecher und diesen einschalten.</font>')
         self.setFont(font)  
         self.config = config
 
@@ -157,15 +188,27 @@ class PagePrepareDrive(QWizardPage):
         label.setPixmap(image)
         layout.addWidget(label)
  
-        self.setLayout(layout)
+        self.setLayout(layout)     
 
 
     def initializePage(self):
     
+        tools.info('*** pepare drive')                
+        self.isComplete = False  
+        self.threadIsRunning = False         
+        
         self.clear() and self.copyFirst()
+        
+        
+    def validatePage(self):
+
+        return True        
 
 
     def isComplete(self):
+        
+        if self.isComplete:
+            return True        
 
         name = self.config.driveName
         
@@ -173,22 +216,31 @@ class PagePrepareDrive(QWizardPage):
         
         drive = tools.drivebyname(name)
         if not drive:                            
-            tools.info('drive "' + name + '" has been removed', logger=self.logger) 
-            return True
+            tools.info('drive "' + name + '" has been removed', logger=self.logger)            
+            self.isComplete = True
+            self.wizard.next()                        
+            return True            
               
-        thread = Thread(target=self.waitForRemoveDrive, args=(self.completeChanged,name,), daemon=True)        
-        thread.start()      
+        if not self.threadIsRunning:
+              
+            self.threadIsRunning = True
+            thread = Thread(target=self.waitForRemoveDrive, args=(self.completeChanged,name,), daemon=True)        
+            thread.start()      
 
         return False
 
 
     def waitForRemoveDrive(self, completeChanged, driveName):            
+        
+        tools.info('start thread')
        
         while tools.drivebyname(driveName):            
             tools.info('wait for drive "' + driveName + '" to be removed', logger=self.logger)            
             time.sleep(1) 
 
         completeChanged.emit()    
+        
+        tools.info('stop thread')
 
 
     def validatePage(self):
@@ -247,14 +299,15 @@ class PagePrepareDrive(QWizardPage):
 class PageCopyFiles(QWizardPage):
 
 
-    def __init__(self, config: Config, font: QFont, image: QPixmap, logger=None):
+    def __init__(self, wizard, config: Config, font: QFont, image: QPixmap, logger=None):
 
         super().__init__()  
 
+        self.wizard = wizard
         self.logger = logger
 
-        self.setTitle('<font size="+2">Kopiere alle Dateien</font>')
-        self.setSubTitle('<font size="+2">Nimm die Karte aus dem Lautsprecher, führe sie in den Adapter ein und stecke diesen an den Computer an.')
+        self.setTitle('<font size="+2">Kopiere restliche Dateien</font>')
+        self.setSubTitle('<font size="+2">Speicherkarte aus Lautsprecher in den Computer.')
         self.setFont(font)
         self.config = config
 
@@ -272,14 +325,19 @@ class PageCopyFiles(QWizardPage):
         self.progressBar = QProgressBar()
         layout.addWidget(self.progressBar)
             
-        self.setLayout(layout)
-
-        self.isComplete = False
+        self.setLayout(layout)         
 
 
     def initializePage(self):
     
-        pass
+        tools.info('*** copy files')
+        self.isComplete = False  
+        self.threadIsRunning = False          
+        
+        
+    def validatePage(self):
+
+        return True        
 
     
     def isComplete(self):
@@ -297,26 +355,28 @@ class PageCopyFiles(QWizardPage):
             self.config.exportDir = drive         
             self.copy()
             self.isComplete = True
+            self.wizard.next()                
             return True
               
-        thread = Thread(target=self.waitForDrive, args=(self.completeChanged,name,), daemon=True)        
-        thread.start()      
+        if not self.threadIsRunning:
+            self.threadIsRunning = True
+            thread = Thread(target=self.waitForDrive, args=(self.completeChanged,name,), daemon=True)        
+            thread.start()      
 
         return False
 
 
     def waitForDrive(self, completeChanged, driveName):            
+        
+        tools.info('start thread')
        
         while not tools.drivebyname(driveName):            
             tools.info('wait for drive "' + driveName + '"', logger=self.logger)            
             time.sleep(1) 
 
         completeChanged.emit()  
-
-
-    def validatePage(self):
-
-        return True
+        
+        tools.info('stop thread')
 
 
     def copy(self):
@@ -363,15 +423,16 @@ class PageCopyFiles(QWizardPage):
 class PageFinal(QWizardPage):
 
 
-    def __init__(self, config: Config, font: QFont, image: QPixmap, logger=None):
+    def __init__(self, wizard, config: Config, font: QFont, image: QPixmap, logger=None):
 
         super().__init__()  
 
+        self.wizard = wizard
         self.logger = logger        
 
         self.setFont(font)
         self.setTitle('<font size="+2">Fertig!</font>')
-        self.setSubTitle('<font size="+2">Das Hörbuch wurde erfolgreiche kopiert. Viel Spaß beim Hören.</font>')
+        self.setSubTitle('<font size="+2">Das Hörbuch wurde erfolgreiche kopiert. Viel Spaß beim Hören!</font>')
 
         layout = QVBoxLayout()
 
@@ -381,6 +442,11 @@ class PageFinal(QWizardPage):
         layout.addWidget(label)
             
         self.setLayout(layout)
+        
+        
+    def initializePage(self):
+    
+        tools.info('*** goodbye')        
 
 
 class Export(QWizard):
@@ -414,16 +480,18 @@ class Export(QWizard):
         self.parent = parent
         self.setWindowTitle(TITLE)
         self.setWindowIcon(QIcon(define.ICONFILE))
+        
+        self.setButtonLayout([QWizard.Stretch, QWizard.FinishButton])
 
         image = QPixmap('pics/export1.png')
-        self.addPage(PageInit(self.config, font, image, logger=self.logger)) 
-        self.addPage(PageSelectAudiobook(self.config, font, logger=self.logger))
+        self.addPage(PageInit(self, self.config, font, image, logger=self.logger)) 
+        self.addPage(PageSelectAudiobook(self, self.config, font, logger=self.logger))
         image = QPixmap('pics/export2.png')
-        self.addPage(PagePrepareDrive(self.config, font, image, logger=self.logger))
+        self.addPage(PagePrepareDrive(self, self.config, font, image, logger=self.logger))
         image = QPixmap('pics/export3.png')  
-        self.addPage(PageCopyFiles(self.config, font, image, logger=self.logger))        
+        self.addPage(PageCopyFiles(self, self.config, font, image, logger=self.logger))        
         image = QPixmap('pics/export4.png')  
-        self.addPage(PageFinal(self.config, font, image, logger=self.logger))
+        self.addPage(PageFinal(self, self.config, font, image, logger=self.logger))
 
         self.show()    
 
