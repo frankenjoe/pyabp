@@ -468,18 +468,12 @@ class Export(QWizard):
         font = QFont()
         font.setPixelSize(self.config.fontSize)
 
-        rect = QDesktopWidget().screenGeometry(-1)
-        #width = rect.width() * 0.75;
-        width = 885
-        #height = rect.height() * 0.75;
-        height = 700        
-        left = (rect.width() - width) / 2
-        top = (rect.height() - height) / 2
-        self.setGeometry(left, top, width, height) 
-
         self.parent = parent
         self.setWindowTitle(TITLE)
         self.setWindowIcon(QIcon(define.ICONFILE))
+        
+        size = app.desktop().screenGeometry()
+        self.setGeometry(0,0,size.width(),size.height())
         
         self.setButtonLayout([QWizard.Stretch, QWizard.FinishButton])
 
@@ -492,8 +486,8 @@ class Export(QWizard):
         self.addPage(PageCopyFiles(self, self.config, font, image, logger=self.logger))        
         image = QPixmap('pics/export4.png')  
         self.addPage(PageFinal(self, self.config, font, image, logger=self.logger))
-
-        self.show()    
+        
+        self.showMaximized()
 
 
 if __name__ == '__main__':    
@@ -513,7 +507,7 @@ if __name__ == '__main__':
 
     # run
 
-    app = QApplication(sys.argv)
+    app = QApplication(sys.argv)    
     ex = Export(app, config, logger=logger)
     sys.exit(app.exec_())    
    
