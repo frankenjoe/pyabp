@@ -5,7 +5,7 @@ A multi-platform Audio Book Player written in Python using [Music Player Daemon]
 # Features
 
 * Playback from last position
-* Keeps list of audiobooks
+* Keeps a list of all audio books
 * Automatically scans for new items
 * Remembers playback location and volume for each title
 * Runs on Windows and Linux
