@@ -189,6 +189,29 @@ class Player:
                 tools.error(ex,self.logger)
 
 
+    def jump(self, track):
+
+        if not self.client or not self.playlist:
+            return  
+
+        track = max(0, min(track, self.playlist.meta.ntracks))  
+
+        if not self.isPlay:
+            self.playlist.meta.track = track
+            self.playlist.meta.position = 0            
+
+        else:
+
+            try:
+
+                (current_track, length, position, duration, path) = self.status()
+                if current_track != track:
+                    self.client.seek(track, 0)
+
+            except Exception as ex:
+                tools.error(ex,self.logger)
+
+
     def next(self):
         
         if not self.client or not self.playlist:

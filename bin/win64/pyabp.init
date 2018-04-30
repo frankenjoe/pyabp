@@ -1,20 +1,21 @@
 [MPD]
-lastdir = 
-confpath = mpd\mpd.conf
 startmpd = 1
+confpath = mpd\mpd.conf
 subdir = 
+lastdir = Bernhard Schlink\Das Wochenende
 
 [EXPORT]
+drivename = 
 exportdir = 
 
 [GUI]
-fullscreen = 0
+isplaying = 1
+fullscreen = 1
 fontsize = 16
-isplaying = 0
 
 [SCAN]
-scanextensions = mp3;ogg;wav;flac
 scanall = 0
-scanmodified = 1
 scannew = 1
+scanmodified = 1
+scanextensions = mp3;ogg;wav;flac
 

@@ -4,7 +4,7 @@ import warnings
 
 from PyQt5.QtGui import (QIcon, QFont)
 from PyQt5.QtCore import (QDate, QDateTime, QRegExp, QSortFilterProxyModel, Qt, QTime)
-from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QPushButton, QSlider, QGridLayout, QGroupBox, QHBoxLayout, QFormLayout, QLabel, QLineEdit, QTextEdit, QTreeView, QVBoxLayout, QWidget, QAbstractItemView)
 
 import tools
@@ -34,16 +34,19 @@ class Control(QGroupBox):
 
         super().__init__()              
 
+        #self.font = font
         self.initUI(font)     
 
 
-    def initUI(self, font):
+    def initUI(self, font):        
 
         layout_top = QHBoxLayout()
         layout_center = QHBoxLayout()
         layout_bottom = QHBoxLayout()
         
-        self.trackPathLabel = self.addLabel('', font, layout_top)        
+        self.trackPathLabel = self.addLabel('', font, layout_top)     
+
+        self.trackNumberComboBox = self.addComboBox(font, layout_center)
         self.trackNumberLabel = self.addLabel('0/0', font, layout_center)
 
         self.trackPositionSlider = QSlider(Qt.Horizontal)
@@ -116,6 +119,29 @@ class Control(QGroupBox):
         return button
 
 
+    def addComboBox(self, font, layout):
+
+        combo = QComboBox()              
+        combo.addItem('000')  
+        combo.SizeAdjustPolicy(QComboBox.AdjustToContents)        
+        layout.addWidget(combo)
+
+        return combo
+
+
+    def updateComboBox(self, track, length):
+
+        combo = self.trackNumberComboBox
+                    
+        if length != combo.count():
+            combo.clear()
+            for i in range(length):
+                combo.addItem(str(i+1))            
+               
+        if track != combo.currentIndex():
+            combo.setCurrentIndex(track)
+
+
     def update(self, info):
 
         (track, length, position, duration, path) = info
@@ -124,7 +150,8 @@ class Control(QGroupBox):
 
             self.trackPathLabel.setText(os.path.basename(path))
             self.trackPathLabel.setToolTip(path)
-            self.trackNumberLabel.setText(str(track+1) + ' / ' + str(length))               
+            self.updateComboBox(track, length)
+            self.trackNumberLabel.setText(' / {}'.format(length))               
             self.trackPositionSlider.setMaximum(int(duration))
             self.trackPositionSlider.setValue(int(position))          
             self.trackDurationLabel.setText(tools.friendlytime(position) + ' / ' + tools.friendlytime(duration))  

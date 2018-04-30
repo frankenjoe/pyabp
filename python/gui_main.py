@@ -97,6 +97,7 @@ class Main(QWidget):
         self.control.volumeSlider.valueChanged.connect(self.onVolumeChanged)
         self.control.trackPositionSlider.sliderMoved.connect(self.onPositionChanged)
         self.control.trackPositionSlider.setTracking(False)
+        self.control.trackNumberComboBox.currentIndexChanged.connect(self.onTrackNumberChanged)
         self.controlThread = ControlThread(self.player, self.control)               
 
         # main
@@ -299,6 +300,9 @@ class Main(QWidget):
         self.player.move(value)
 
 
+    def onTrackNumberChanged(self, value):
+        
+        self.player.jump(value)
 
  
 if __name__ == '__main__':
