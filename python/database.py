@@ -1,21 +1,17 @@
 import os
 import random
-import logging
 
 from tinydb import TinyDB, Query
 from meta import Meta
 import tools
 
+
 class Database:
-
-
     logger = None
     db = None
 
-
-    def __init__(self, logger = None):
+    def __init__(self, logger=None):
         self.logger = logger
-
 
     def open(self, path: str):
 
@@ -23,22 +19,20 @@ class Database:
             self.db.close()
 
         tools.info('open database ' + path, self.logger)
-        
+
         self.db = TinyDB(path)
 
-        
     def close(self):
-        
+
         if self.db is None:
             return
 
-        tools.info('close database', self.logger)   
+        tools.info('close database', self.logger)
 
         self.db.close()
 
+    def contains(self, root: str):
 
-    def contains(self, root : str):
-                
         if self.db is None:
             return False
 
@@ -46,30 +40,29 @@ class Database:
 
         return self.db.contains(query.root == root)
 
-
-    def write(self, meta : Meta):
+    def write(self, meta: Meta):
 
         if self.db is None:
             return
 
         query = Query()
 
-        self.db.upsert({'root' : meta.root,
-            'artist' : meta.artist, 
-            'album' : meta.album,
-            'track' : meta.track,
-            'ntracks' : meta.ntracks,
-            'position' : meta.position,
-            'duration' : meta.duration,
-            'volume' : meta.volume,
-            'modified' : meta.modified }, 
-            query.root == meta.root)
-
+        self.db.upsert({'root': meta.root,
+                        'artist': meta.artist,
+                        'album': meta.album,
+                        'track': meta.track,
+                        'ntracks': meta.ntracks,
+                        'position': meta.position,
+                        'duration': meta.duration,
+                        'volume': meta.volume,
+                        'modified': meta.modified,
+                        'known': meta.known},
+                       query.root == meta.root)
 
     def read(self, root):
-        
+
         if self.db is None:
-             return None
+            return None
 
         query = Query()
 
@@ -88,13 +81,12 @@ class Database:
         meta.duration = result[0]['duration']
         meta.volume = result[0]['volume']
         meta.modified = result[0]['modified']
+        meta.known = result[0]['known']
 
         return meta
 
-
-    def isnotdir(self, path : str):
+    def isnotdir(self, path: str):
         return not os.path.isdir(path)
-
 
     def clean(self):
 
@@ -105,12 +97,11 @@ class Database:
 
         condition = query.root.test(self.isnotdir)
         result = self.db.remove(condition)
-            
+
         tools.info('clean database (' + str(len(result)) + ' entries removed)', self.logger)
 
-
     def print(self):
-    
+
         if not self.db:
             return
 
@@ -118,14 +109,13 @@ class Database:
 
 
 if __name__ == '__main__':
-
     meta = Meta()
     meta.root = '.'
     meta.album = tools.randstr()
     meta.artist = tools.randstr()
     meta.ntracks = 100
-    meta.track = random.randint(0, meta.ntracks-1)
-    meta.position = round(random.uniform(0.0,60.0), 1)
+    meta.track = random.randint(0, meta.ntracks - 1)
+    meta.position = round(random.uniform(0.0, 60.0), 1)
     meta.volume = random.randint(0, 100)
     meta.modified = 0
 
@@ -138,12 +128,8 @@ if __name__ == '__main__':
 
     meta2 = database.read(meta.root)
     meta2.print()
-    
+
     database.clean()
     database.print()
 
     database.close()
-
-    
-
-    

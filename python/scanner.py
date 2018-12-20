@@ -1,8 +1,5 @@
-import glob
 import os
-import warnings
-import logging
-from enum import Enum
+import csv
 
 from tinytag import TinyTag
 
@@ -124,14 +121,20 @@ class Scanner:
 if __name__ == '__main__':
     
     config = Config()
-    config.read('../pyabp.init')
+    config.read('pyabp.init')
 
     database = Database()
-    database.open('../pyabp.json')
+    database.open('pyabp.json')
 
     scanner = Scanner(config, database)
     playlists = scanner.scan()
-    for playlist in playlists:
-        playlist.print()
+
+    with open('database.csv', 'w', newline='') as fp:
+        writer = csv.writer(fp, delimiter=';')
+        writer.writerow(['', 'Artist', 'Album', 'Dauer'])
+        for playlist in playlists:
+            playlist.print()
+            known = '[x]' if playlist.meta.known else '[ ]'
+            writer.writerow([known, playlist.meta.artist, playlist.meta.album, str(tools.friendlytime(playlist.meta.duration))])
 
     database.close()
