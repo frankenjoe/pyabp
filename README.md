@@ -20,7 +20,7 @@ A multi-platform Audio Book Player written in Python using [Music Player Daemon]
 
 * edit .\bin\win64\mpd.conf and set 'music_directory'
 
-* run .\bin\win64\pyabt.exe
+* run .\bin\win64\pyabp.exe
 
 # Linux
 
